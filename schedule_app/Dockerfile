@@ -18,7 +18,12 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # アプリコードをコピー
-COPY . /app
+# Copy application code into a directory named `schedule_app` so that
+# the package path `schedule_app` is available at runtime (i.e. /app/schedule_app)
+COPY . /app/schedule_app
+
+# Ensure Python can import the package by adding /app to PYTHONPATH
+ENV PYTHONPATH=/app:$PYTHONPATH
 
 # ポート
 EXPOSE 5000
