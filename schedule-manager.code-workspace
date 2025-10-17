@@ -7,5 +7,7 @@
 			"path": "../k8s-infrastructure"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"powershell.cwd": "schedule-manager"
+	}
 }
