@@ -104,7 +104,7 @@ jobs:
           /usr/local/bin/buildctl build \
             --no-cache \
             --frontend dockerfile.v0 \
-            --local context=. \
-            --local dockerfile=. \
+            --local context=./schedule_app \
+            --local dockerfile=./schedule_app \
             --output type=image,name=${{ env.REGISTRY }}/paradise-lost-developer-team/${{ env.IMAGE_NAME }}:latest,push=true \
             --output type=image,name=${{ env.REGISTRY }}/paradise-lost-developer-team/${{ env.IMAGE_NAME }}:${{ github.sha }},push=true

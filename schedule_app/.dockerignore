@@ -1,0 +1,71 @@
+# Ignore Git metadata
+.git
+.gitignore
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+.pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+
+# Bytecode, caches, test artifacts
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+
+# Logs and temporary files
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# Environment files and secrets
+.env
+.env.local
+.env.*.local
+.local
+
+# Databases
+*.sqlite3
+*.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker-related
+.dockerignore
+
+# Build outputs
+build/
+dist/
+*.egg-info/
