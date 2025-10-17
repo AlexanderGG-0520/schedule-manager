@@ -25,6 +25,12 @@ def create_app(config=None):
         response.headers.setdefault("Referrer-Policy", "no-referrer")
         return response
 
+    # ヘルスチェックエンドポイント: Kubernetes の readiness/liveness probe 用
+    @app.route("/health", methods=["GET"])
+    def health_check():
+        # 簡易的に 200 を返す。将来的に DB などの依存チェックを追加しても良い。
+        return ("OK", 200)
+
     from .auth.routes import auth_bp
     from .events.routes import events_bp
     from .api.v1 import api_bp
