@@ -1,16 +1,27 @@
-# Python 3.11 + Gunicorn example
+# ベースイメージは任意（ここでは slim を推奨）
 FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# 非対話的: minimal deps
+ENV PYTHONUNBUFFERED=1 \
+    POETRY_VIRTUALENVS_CREATE=false
 
 WORKDIR /app
 
-COPY requirements.txt .
+# 必要なら OS レベルの依存をインストール（例: build-essential が必要なら追加）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+ && rm -rf /var/lib/apt/lists/*
+
+# 依存ファイルをコピーしてインストール
+COPY requirements.txt ./
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# アプリコードをコピー
+COPY . /app
 
-EXPOSE 8000
+# ポート
+EXPOSE 5000
 
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8000", "--workers", "2"]
+# 本番向け Gunicorn コマンド（ワーカ数は適宜調整）
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi:app", "-w", "4", "--threads", "2"]
