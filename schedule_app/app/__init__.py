@@ -14,6 +14,21 @@ def create_app(config=None):
     app = Flask(__name__, static_folder="static", template_folder="templates")
     app.config.from_object(config or Config)
 
+    # If using a file-based SQLite URI, ensure the parent directory exists so the DB file can be created.
+    db_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+    if db_uri and db_uri.startswith("sqlite:") and "///" in db_uri:
+        # format: sqlite:////absolute/path or sqlite:///relative/path
+        path_part = db_uri.split("///", 1)[1]
+        # For absolute paths there may be a leading slash; normalize
+        from pathlib import Path
+        db_path = Path(path_part)
+        parent = db_path.parent
+        try:
+            parent.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            # If we can't create the directory, log via app.logger later when context is available
+            pass
+
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
