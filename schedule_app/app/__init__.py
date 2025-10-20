@@ -17,6 +17,19 @@ def create_app(config=None):
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    # 未認証時のリダイレクト先と flash カテゴリを設定
+    login_manager.login_view = "auth.login"  # type: ignore
+    login_manager.login_message_category = "warning"  # type: ignore
+    # Flask-Login: ユーザーIDから User インスタンスを復元するローダーを登録
+    from .models import User
+
+    @login_manager.user_loader
+    def load_user(user_id: str):
+        try:
+            # User.id は整数なので、文字列を int に変換して検索
+            return User.query.get(int(user_id))
+        except Exception:
+            return None
     csrf.init_app(app)
 
     @app.after_request
