@@ -18,7 +18,7 @@ class Config:
     MAIL_USE_TLS: Final[bool] = bool(os.getenv("MAIL_USE_TLS", "True") == "True")
     MAIL_USERNAME: Final[str] = os.getenv("MAIL_USERNAME", "")
     MAIL_PASSWORD: Final[str] = os.getenv("MAIL_PASSWORD", "")
-    MAIL_DEFAULT_SENDER: Final[str] = os.getenv("MAIL_DEFAULT_SENDER", "no-reply@example.com")
+    MAIL_DEFAULT_SENDER: Final[str] = os.getenv("MAIL_DEFAULT_SENDER", "no-reply@aivis-chan-bot.com")
     # Token settings for email confirmation
     SECURITY_PASSWORD_SALT: Final[str] = os.getenv("SECURITY_PASSWORD_SALT", "change-this-salt")
     CONFIRM_TOKEN_EXPIRATION: Final[int] = int(os.getenv("CONFIRM_TOKEN_EXPIRATION", "3600"))
