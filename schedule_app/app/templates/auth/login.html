@@ -1,9 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-<form method="post">
-  {{ form.hidden_tag() }}
-  <label>Username: {{ form.username() }}</label>
-  <label>Password: {{ form.password() }}</label>
-  <button type="submit">Login</button>
-</form>
+<div class="auth-container">
+  <h1>ログイン</h1>
+  <form method="post" class="auth-form">
+    {{ form.hidden_tag() }}
+    <div class="form-row">
+      {{ form.username.label }}
+      {{ form.username(class="input") }}
+    </div>
+    <div class="form-row">
+      {{ form.password.label }}
+      {{ form.password(class="input") }}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn primary">ログイン</button>
+      <a class="btn link" href="{{ url_for('auth.register') }}">新規登録はこちら</a>
+    </div>
+  </form>
+</div>
 {% endblock %}

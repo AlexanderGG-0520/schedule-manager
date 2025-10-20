@@ -9,11 +9,30 @@
 </head>
 <body>
   <header>
-    <nav>
-      <a href="{{ url_for('events.calendar') }}">カレンダー</a>
-      <a href="{{ url_for('auth.logout') }}">ログアウト</a>
+    <nav class="site-nav">
+      <a class="nav-brand" href="{{ url_for('events.calendar') }}">スケジュール</a>
+      <div class="nav-links">
+        {% if current_user.is_authenticated %}
+          <span class="nav-user">{{ current_user.username }}</span>
+          <a href="{{ url_for('auth.logout') }}">ログアウト</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}">ログイン</a>
+          <a href="{{ url_for('auth.register') }}">登録</a>
+        {% endif %}
+      </div>
     </nav>
   </header>
+  <section class="flash-area">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash {{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+  </section>
   <main id="app">
     {% block content %}{% endblock %}
   </main>

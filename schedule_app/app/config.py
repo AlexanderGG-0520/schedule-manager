@@ -12,3 +12,13 @@ class Config:
     SESSION_COOKIE_HTTPONLY: Final[bool] = True
     SESSION_COOKIE_SECURE: Final[bool] = os.getenv("FLASK_ENV") == "production"
     REMEMBER_COOKIE_HTTPONLY: Final[bool] = True
+    # Mail settings (for confirmation emails)
+    MAIL_SERVER: Final[str] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    MAIL_PORT: Final[int] = int(os.getenv("MAIL_PORT", "587"))
+    MAIL_USE_TLS: Final[bool] = bool(os.getenv("MAIL_USE_TLS", "True") == "True")
+    MAIL_USERNAME: Final[str] = os.getenv("MAIL_USERNAME", "")
+    MAIL_PASSWORD: Final[str] = os.getenv("MAIL_PASSWORD", "")
+    MAIL_DEFAULT_SENDER: Final[str] = os.getenv("MAIL_DEFAULT_SENDER", "no-reply@example.com")
+    # Token settings for email confirmation
+    SECURITY_PASSWORD_SALT: Final[str] = os.getenv("SECURITY_PASSWORD_SALT", "change-this-salt")
+    CONFIRM_TOKEN_EXPIRATION: Final[int] = int(os.getenv("CONFIRM_TOKEN_EXPIRATION", "3600"))
