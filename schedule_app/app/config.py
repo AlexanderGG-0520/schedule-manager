@@ -11,7 +11,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS: Final[bool] = False
     SESSION_COOKIE_HTTPONLY: Final[bool] = True
     SESSION_COOKIE_SECURE: Final[bool] = os.getenv("FLASK_ENV") == "production"
+    SESSION_COOKIE_SAMESITE: Final[str] = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
     REMEMBER_COOKIE_HTTPONLY: Final[bool] = True
+    REMEMBER_COOKIE_SECURE: Final[bool] = os.getenv("FLASK_ENV") == "production"
     # Mail settings (for confirmation emails)
     MAIL_SERVER: Final[str] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT: Final[int] = int(os.getenv("MAIL_PORT", "587"))

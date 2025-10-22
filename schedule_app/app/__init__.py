@@ -67,4 +67,13 @@ def create_app(config=None):
     app.register_blueprint(events_bp)
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
+    # Register CLI commands (scheduler)
+    try:
+        from .cli import scheduler_cli
+
+        app.cli.add_command(scheduler_cli)
+    except Exception:
+        # If importing the CLI fails (e.g., missing optional deps), continue silently
+        pass
+
     return app
