@@ -8,6 +8,7 @@ from typing import cast
 import smtplib
 from email.message import EmailMessage
 from sqlalchemy.exc import IntegrityError
+import requests
 from datetime import datetime, timedelta
 from ..forms import ResendConfirmationForm
 
@@ -15,6 +16,35 @@ auth_bp = Blueprint("auth", __name__, template_folder="../templates")
 
 
 def send_email(subject: str, recipient: str, body: str) -> bool:
+    provider = current_app.config.get("EMAIL_PROVIDER", "smtp")
+    # Resend (API) provider
+    if provider == "resend":
+        try:
+            api_key = current_app.config.get("RESEND_API_KEY")
+            if not api_key:
+                current_app.logger.error("RESEND_API_KEY not configured")
+                return False
+            payload = {
+                "from": current_app.config.get("MAIL_DEFAULT_SENDER"),
+                "to": [recipient],
+                "subject": subject,
+                "text": body,
+            }
+            resp = requests.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json=payload,
+                timeout=10,
+            )
+            if resp.status_code in (200, 202):
+                return True
+            current_app.logger.error("Resend API returned non-success: %s %s", resp.status_code, resp.text)
+            return False
+        except Exception:
+            current_app.logger.exception("Failed to send email via Resend API")
+            return False
+
+    # Fallback to SMTP if provider is not 'resend'
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = current_app.config.get("MAIL_DEFAULT_SENDER")
@@ -34,7 +64,7 @@ def send_email(subject: str, recipient: str, body: str) -> bool:
         server.quit()
         return True
     except Exception as e:
-        current_app.logger.exception("Failed to send email")
+        current_app.logger.exception("Failed to send email via SMTP fallback")
         return False
 
 
