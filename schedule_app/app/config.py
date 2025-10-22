@@ -24,3 +24,9 @@ class Config:
     # Token settings for email confirmation
     SECURITY_PASSWORD_SALT: Final[str] = os.getenv("SECURITY_PASSWORD_SALT", "change-this-salt")
     CONFIRM_TOKEN_EXPIRATION: Final[int] = int(os.getenv("CONFIRM_TOKEN_EXPIRATION", "3600"))
+    # Flask-WTF CSRF settings
+    # Time limit for CSRF tokens (seconds). Increase if users report token expiry during form submission.
+    # Set via env var `WTF_CSRF_TIME_LIMIT`. Use 0 or empty to disable time limit.
+    WTF_CSRF_TIME_LIMIT: Final[int] = int(os.getenv("WTF_CSRF_TIME_LIMIT", "86400"))
+    # Optional separate secret for CSRF signing. If not provided, SECRET_KEY is used.
+    WTF_CSRF_SECRET_KEY: Final[str] = os.getenv("WTF_CSRF_SECRET_KEY", SECRET_KEY)
