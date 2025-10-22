@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from ..forms import ResendConfirmationForm
 from flask import session
 import pyotp
+from sqlalchemy.exc import ProgrammingError
 
 auth_bp = Blueprint("auth", __name__, template_folder="../templates")
 
@@ -196,7 +197,13 @@ def resend_confirmation():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        try:
+            user = User.query.filter_by(username=form.username.data).first()
+        except ProgrammingError:
+            # Likely DB schema missing migrations (e.g., two_factor columns)
+            current_app.logger.exception("Database schema error during login - missing migrations?")
+            flash("アプリケーションのデータベーススキーマが最新ではない可能性があります。管理者に連絡してマイグレーションを適用してください。", "error")
+            return render_template("auth/login.html", form=form)
         if user and user.check_password(form.password.data):
             if not user.confirmed:
                 flash("メールアドレスが未確認です。受信トレイの確認リンクをクリックしてください。", "warning")

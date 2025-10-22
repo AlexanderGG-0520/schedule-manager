@@ -13,6 +13,7 @@
       <a class="nav-brand" href="{{ url_for('events.calendar') }}">スケジュール</a>
       <div class="nav-links">
         <form id="lang-form" method="post" action="{{ url_for('auth.set_language') }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <select name="lang" onchange="document.getElementById('lang-form').submit()" aria-label="言語選択">
             <option value="ja" {% if session.get('lang') == 'ja' %}selected{% endif %}>日本語</option>
             <option value="en" {% if session.get('lang') == 'en' %}selected{% endif %}>English</option>
