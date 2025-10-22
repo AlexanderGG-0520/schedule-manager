@@ -7,6 +7,9 @@ from ..forms import RegisterForm, LoginForm
 from typing import cast
 import smtplib
 from email.message import EmailMessage
+from sqlalchemy.exc import IntegrityError
+from datetime import datetime, timedelta
+from ..forms import ResendConfirmationForm
 
 auth_bp = Blueprint("auth", __name__, template_folder="../templates")
 
@@ -39,28 +42,51 @@ def send_email(subject: str, recipient: str, body: str) -> bool:
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
-        if User.query.filter((User.username == form.username.data) | (User.email == form.email.data)).first():
+        existing = User.query.filter((User.username == form.username.data) | (User.email == form.email.data)).first()
+        if existing:
+            # If user exists and is not confirmed, offer to resend confirmation email instead of blocking silently
+            if not existing.confirmed:
+                # generate token for existing user and attempt resend
+                token = existing.generate_confirmation_token()
+                confirm_url = url_for("auth.confirm_email", token=token, _external=True)
+                subject = "[Schedule Manager] メールアドレス確認 (再送)"
+                body = f"以下のリンクをクリックして本登録を完了してください:\n\n{confirm_url}\n\nこのリンクは1時間で無効になります。"
+                if send_email(subject, str(existing.email), body):
+                    flash("確認メールを再送しました。受信トレイを確認してください。", "success")
+                else:
+                    flash("確認メールの送信に失敗しました。管理者に連絡してください。", "error")
+                return render_template("auth/register.html", form=form)
             flash("ユーザー名またはメールアドレスは既に使用されています。", "warning")
             return render_template("auth/register.html", form=form)
+        # Create user object in memory but do NOT persist until email is sent successfully
         user = User()
         user.username = form.username.data
         user.email = form.email.data
         user.set_password(cast(str, form.password.data))
         # marked unconfirmed until email verification
         user.confirmed = False
-        db.session.add(user)
-        db.session.commit()
 
+        # Generate token now (doesn't require DB persistence)
         token = user.generate_confirmation_token()
         confirm_url = url_for("auth.confirm_email", token=token, _external=True)
         subject = "[Schedule Manager] メールアドレス確認"
         body = f"以下のリンクをクリックして本登録を完了してください:\n\n{confirm_url}\n\nこのリンクは1時間で無効になります。"
-
-        if send_email(subject, str(user.email), body):
-            flash("確認メールを送信しました。受信トレイを確認してください。", "success")
-        else:
+        # Try sending email first. If it fails, do not persist the user.
+        if not send_email(subject, str(user.email), body):
             flash("確認メールの送信に失敗しました。管理者に連絡してください。", "error")
+            return render_template("auth/register.html", form=form)
 
+        # Email sent successfully — now persist the user. Handle race conditions on unique constraints.
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            current_app.logger.exception("User commit failed after email sent — possible race on unique constraint")
+            flash("ユーザー名またはメールアドレスは既に使用されています。再度試してください。", "warning")
+            return render_template("auth/register.html", form=form)
+
+        flash("確認メールを送信しました。受信トレイを確認してください。", "success")
         return redirect(url_for("auth.login"))
     return render_template("auth/register.html", form=form)
 
@@ -84,6 +110,42 @@ def confirm_email(token: str):
     db.session.commit()
     flash("メールアドレスを確認しました。ログインしてください。", "success")
     return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/resend-confirmation", methods=["GET", "POST"])
+def resend_confirmation():
+    form = ResendConfirmationForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if not user:
+            flash("そのメールアドレスのアカウントは見つかりません。", "warning")
+            return render_template("auth/resend_confirmation.html", form=form)
+        if user.confirmed:
+            flash("既に本登録済みです。ログインしてください。", "warning")
+            return redirect(url_for("auth.login"))
+
+        # rate-limit: 5 minutes default
+        last = user.last_confirmation_sent_at
+        now = datetime.utcnow()
+        cooldown = timedelta(minutes=5)
+        if last and now - last < cooldown:
+            remaining = cooldown - (now - last)
+            flash(f"確認メールは既に送信済みです。再送は{int(remaining.total_seconds()//60)}分後に行えます。", "info")
+            return render_template("auth/resend_confirmation.html", form=form)
+
+        token = user.generate_confirmation_token()
+        confirm_url = url_for("auth.confirm_email", token=token, _external=True)
+        subject = "[Schedule Manager] メールアドレス確認 (再送)"
+        body = f"以下のリンクをクリックして本登録を完了してください:\n\n{confirm_url}\n\nこのリンクは1時間で無効になります。"
+        if send_email(subject, str(user.email), body):
+            user.last_confirmation_sent_at = db.func.now()
+            db.session.add(user)
+            db.session.commit()
+            flash("確認メールを再送しました。受信トレイを確認してください。", "success")
+            return redirect(url_for("auth.login"))
+        else:
+            flash("確認メールの送信に失敗しました。管理者に連絡してください。", "error")
+    return render_template("auth/resend_confirmation.html", form=form)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])

@@ -20,3 +20,7 @@ class EventForm(FlaskForm):
     start_at = DateTimeLocalField("start_at", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
     end_at = DateTimeLocalField("end_at", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
     color = StringField("color", validators=[DataRequired(), Length(min=4, max=7)])
+
+
+class ResendConfirmationForm(FlaskForm):
+    email = StringField("email", validators=[DataRequired(), Email(), Length(max=255)])

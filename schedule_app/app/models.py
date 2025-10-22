@@ -17,6 +17,8 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     confirmed = db.Column(db.Boolean, default=False, nullable=False)
     confirmed_at = db.Column(db.DateTime, nullable=True)
+    # track when the last confirmation email was sent to allow rate-limiting resends
+    last_confirmation_sent_at = db.Column(db.DateTime, nullable=True)
 
     events = db.relationship("Event", back_populates="user", cascade="all, delete-orphan")
 
