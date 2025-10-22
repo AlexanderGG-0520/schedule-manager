@@ -1,6 +1,16 @@
+import sys
+import os
 import pytest
-from app import create_app, db
-from app.config import Config
+
+# ensure repository root is on sys.path so `schedule_app` package can be imported
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+# Ensure tests have a DATABASE_URL so importing app.config doesn't raise
+os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
+from schedule_app.app import create_app, db
+from schedule_app.app.config import Config
 
 # 親 Config が Final アノテーションを持つため、継承して属性を再宣言すると
 # 型チェッカ（Pylance）で警告が出る。テスト用は独立クラスとして定義する。

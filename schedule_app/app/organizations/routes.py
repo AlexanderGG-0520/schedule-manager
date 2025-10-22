@@ -1,5 +1,5 @@
 from __future__ import annotations
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, session
 from flask_login import login_required, current_user
 from ..forms import OrganizationForm, InviteMemberForm
 from .. import db
@@ -118,7 +118,9 @@ def accept_invite(token: str):
     inv = Invitation.query.get_or_404(inv_id)
     # If the user is logged in, associate; else ask to login/register
     if not current_user.is_authenticated:
-        flash("参加するにはログインしてください。招待はログイン後に有効になります。", "info")
+        # store token in session so we can process it after login
+        session["pending_invite"] = token
+        flash("参加するにはログインしてください。ログイン後に招待が自動的に処理されます。", "info")
         return redirect(url_for("auth.login"))
     user_obj = cast(UserModel, current_user._get_current_object())
     # create membership if not exists

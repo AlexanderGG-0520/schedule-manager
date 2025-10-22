@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>外部アカウント詳細</h2>
+<div>
+  <p><strong>プロバイダ:</strong> {{ account.provider }}</p>
+  <p><strong>外部 ID:</strong> {{ account.external_id or '(none)' }}</p>
+  <p><strong>接続日時:</strong> {{ account.created_at }}</p>
+  <p><strong>有効期限:</strong> {{ account.expires_at or '不明' }}</p>
+  <p><strong>最終同期:</strong> {{ account.updated_at or '不明' }}</p>
+</div>
+
+<button id="sync-btn">今すぐ同期</button>
+<div id="sync-result"></div>
+
+<h3>最近の同期履歴</h3>
+<table>
+  <thead><tr><th>日時</th><th>レベル</th><th>メッセージ</th></tr></thead>
+  <tbody>
+    {% for l in recent_logs %}
+    <tr>
+      <td>{{ l.created_at }}</td>
+      <td>{{ l.level }}</td>
+      <td>{{ l.message }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="3">履歴がありません。</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+document.getElementById('sync-btn').addEventListener('click', async function(){
+  const resp = await fetch('{{ url_for('integrations.account_sync', account_id=account.id) }}', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token() }}'}})
+  const data = await resp.json()
+  if (resp.ok) {
+    document.getElementById('sync-result').innerText = '同期成功: ' + JSON.stringify(data)
+    location.reload()
+  } else {
+    document.getElementById('sync-result').innerText = '同期失敗: ' + JSON.stringify(data)
+  }
+})
+</script>
+
+{% endblock %}

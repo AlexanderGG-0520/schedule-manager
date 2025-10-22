@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>二要素認証コードの確認</h2>
+<form method="post">
+  <label for="code">Authenticator のコード</label>
+  <input id="code" name="code" type="text" />
+  <button type="submit">確認</button>
+</form>
+{% endblock %}

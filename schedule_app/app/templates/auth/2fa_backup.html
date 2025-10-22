@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>バックアップコード（この画面で一度だけ表示されます）</h2>
+<ul>
+{% for c in codes %}
+  <li><code>{{ c }}</code></li>
+{% endfor %}
+</ul>
+<p>これらのコードは一度だけ表示されます。安全な場所に保管してください。</p>
+{% endblock %}

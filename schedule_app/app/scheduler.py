@@ -51,6 +51,14 @@ def register_jobs(scheduler: BackgroundScheduler, app: Flask):
 
             scheduler.add_job(cleanup_old_events, "interval", minutes=15, id="cleanup_old_events", replace_existing=True)
             logger.info("Registered job cleanup_old_events")
+            # register external account refresh job if available
+            try:
+                from .jobs import refresh_external_accounts  # type: ignore
+
+                scheduler.add_job(refresh_external_accounts, "interval", minutes=10, id="refresh_external_accounts", replace_existing=True)
+                logger.info("Registered job refresh_external_accounts")
+            except Exception:
+                logger.info("No refresh_external_accounts job available")
     except Exception as e:
         logger.exception("Failed to register jobs: %s", e)
 

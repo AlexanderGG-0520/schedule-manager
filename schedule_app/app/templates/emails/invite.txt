@@ -1,0 +1,13 @@
+{{ inviter_name }} さんから "{{ event.title }}" への招待が届いています.
+
+イベントの詳細:
+- タイトル: {{ event.title }}
+- 開始: {{ event.start_at }}
+- 終了: {{ event.end_at }}
+- 場所: {{ event.location or '指定なし' }}
+
+参加/辞退は以下のリンクを開いてください:
+
+{{ accept_url }}
+
+Schedule Manager

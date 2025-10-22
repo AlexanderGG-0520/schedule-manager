@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>イベントに招待されました</title>
+  </head>
+  <body>
+    <p>{{ recipient_name or '' }} 様,</p>
+    <p>{{ inviter_name }} さんから「{{ event.title }}」への招待が届いています。</p>
+    <p>イベントの詳細:</p>
+    <ul>
+      <li>タイトル: {{ event.title }}</li>
+      <li>開始: {{ event.start_at }}</li>
+      <li>終了: {{ event.end_at }}</li>
+      <li>場所: {{ event.location or '指定なし' }}</li>
+    </ul>
+    <p>以下のボタンをクリックして参加を承認または辞退してください。</p>
+    <p><a href="{{ accept_url }}" style="display:inline-block;padding:12px 18px;background:#2d7cff;color:#fff;border-radius:6px;text-decoration:none">招待を開く</a></p>
+    <p>もしボタンが機能しない場合は次のリンクをコピーしてブラウザに貼り付けてください:<br>
+    <small>{{ accept_url }}</small></p>
+    <hr>
+    <p>Schedule Manager</p>
+  </body>
+</html>

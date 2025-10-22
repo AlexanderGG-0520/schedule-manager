@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>二要素認証の無効化</h2>
+<p>Authenticator アプリのコード、またはバックアップコードを入力してください。</p>
+<form method="post">
+  <label for="password">パスワード（再認証）</label>
+  <input id="password" name="password" type="password" />
+  <br/>
+  <label for="code">コード</label>
+  <input id="code" name="code" type="text" />
+  <button type="submit">無効化</button>
+</form>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>二要素認証の設定</h2>
+<p>以下のシークレットを Authenticator アプリに登録してください。</p>
+<p><strong>シークレット:</strong> {{ secret }}</p>
+<p>または、以下の URL を QR コードやアプリに読み込んでください:</p>
+<p>{{ uri }}</p>
+{% if qr_data_uri %}
+  <p><img src="{{ qr_data_uri }}" alt="QRコード"/></p>
+{% endif %}
+<form method="post" action="{{ url_for('auth.two_factor_verify') }}">
+  <label for="code">Authenticator のコード</label>
+  <input id="code" name="code" type="text" />
+  <button type="submit">確認して有効化</button>
+</form>
+<form method="post" action="{{ url_for('auth.two_factor_backup') }}">
+  <button type="submit">バックアップコードを生成して表示</button>
+</form>
+{% endblock %}

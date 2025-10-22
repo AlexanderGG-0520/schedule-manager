@@ -20,6 +20,11 @@ class EventForm(FlaskForm):
     # DateTimeLocalField は input type="datetime-local" 用。保存時はUTCに変換すること。
     start_at = DateTimeLocalField("start_at", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
     end_at = DateTimeLocalField("end_at", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
+    location = StringField("location", validators=[Optional(), Length(max=255)])
+    participants = StringField("participants", validators=[Optional(), Length(max=2000)])
+    category = StringField("category", validators=[Optional(), Length(max=64)])
+    rrule = StringField("rrule", validators=[Optional(), Length(max=512)])
+    timezone = StringField("timezone", validators=[Optional(), Length(max=64)])
     color = StringField("color", validators=[DataRequired(), Length(min=4, max=7)])
     organization_id = SelectField("organization_id", choices=[], coerce=int, validators=[Optional()])
 

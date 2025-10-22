@@ -4,11 +4,13 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 from .config import Config
+from flask_babel import Babel
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+babel = Babel()
 
 def create_app(config=None):
     app = Flask(__name__, static_folder="static", template_folder="templates")
@@ -46,6 +48,25 @@ def create_app(config=None):
         except Exception:
             return None
     csrf.init_app(app)
+    babel.init_app(app)
+
+    def get_locale():
+        # allow user override via session, else Accept-Language
+        from flask import session, request
+        if session.get('lang'):
+            return session.get('lang')
+        return request.accept_languages.best_match(['ja', 'en'])
+
+    # Register the locale selector function (assign to attribute to satisfy type checkers)
+    try:
+        # Preferred for modern Flask-Babel versions
+        babel.locale_selector_func = get_locale  # type: ignore[attr-defined]
+    except Exception:
+        # Fallback for older Flask-Babel versions that only have the decorator API
+        try:
+            babel.localeselector(get_locale)  # type: ignore[attr-defined]
+        except Exception:
+            pass
 
     @app.after_request
     def set_security_headers(response):
@@ -63,6 +84,25 @@ def create_app(config=None):
     from .events.routes import events_bp
     from .organizations.routes import org_bp
     from .api.v1 import api_bp
+    # Integrations (optional)
+    try:
+        from .integrations.google import google_bp
+        app.register_blueprint(google_bp)
+    except Exception:
+        # integrations are optional
+        pass
+        try:
+            from .integrations.routes import integrations_bp
+
+            app.register_blueprint(integrations_bp)
+        except Exception:
+            pass
+        try:
+            from .integrations.outlook import outlook_bp
+
+            app.register_blueprint(outlook_bp)
+        except Exception:
+            pass
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(events_bp)

@@ -11,11 +11,21 @@ from sqlalchemy.exc import IntegrityError
 import requests
 from datetime import datetime, timedelta
 from ..forms import ResendConfirmationForm
+from flask import session
+import pyotp
 
 auth_bp = Blueprint("auth", __name__, template_folder="../templates")
 
 
-def send_email(subject: str, recipient: str, body: str) -> bool:
+@auth_bp.route('/set-language', methods=['POST'])
+def set_language():
+    lang = request.form.get('lang')
+    if lang in ('ja', 'en'):
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('events.calendar'))
+
+
+def send_email(subject: str, recipient: str, body: str, html: str | None = None) -> bool:
     provider = current_app.config.get("EMAIL_PROVIDER", "smtp")
     # Resend (API) provider
     if provider == "resend":
@@ -30,6 +40,8 @@ def send_email(subject: str, recipient: str, body: str) -> bool:
                 "subject": subject,
                 "text": body,
             }
+            if html:
+                payload["html"] = html
             resp = requests.post(
                 "https://api.resend.com/emails",
                 headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -50,6 +62,8 @@ def send_email(subject: str, recipient: str, body: str) -> bool:
     msg["From"] = current_app.config.get("MAIL_DEFAULT_SENDER")
     msg["To"] = recipient
     msg.set_content(body)
+    if html:
+        msg.add_alternative(html, subtype="html")
     try:
         mail_server: str = str(current_app.config.get("MAIL_SERVER"))
         mail_port: int = int(current_app.config.get("MAIL_PORT") or 0)
@@ -187,7 +201,16 @@ def login():
             if not user.confirmed:
                 flash("メールアドレスが未確認です。受信トレイの確認リンクをクリックしてください。", "warning")
                 return redirect(url_for("auth.login"))
+            # If 2FA is enabled, store pending login and prompt for TOTP
+            if user.two_factor_enabled:
+                session['pending_2fa_user'] = user.id
+                # don't log in yet; redirect to 2FA verify form
+                return redirect(url_for('auth.two_factor_verify'))
             login_user(user)
+            # If there's a pending invite token saved in session, process it
+            pending = session.pop("pending_invite", None)
+            if pending:
+                return redirect(url_for("organizations.accept_invite", token=pending))
             return redirect(url_for("events.calendar"))
         flash("認証に失敗しました。", "error")
     return render_template("auth/login.html", form=form)
@@ -198,3 +221,111 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("auth.login"))
+
+
+@auth_bp.route('/2fa/setup', methods=['GET'])
+@login_required
+def two_factor_setup():
+    # generate or show secret for current user
+    if not current_user.two_factor_secret:
+        secret = pyotp.random_base32()
+        current_user.two_factor_secret = secret
+        db.session.add(current_user)
+        db.session.commit()
+    else:
+        secret = current_user.two_factor_secret
+    # provide provisioning URI for authenticator apps
+    uri = pyotp.totp.TOTP(secret).provisioning_uri(name=current_user.email, issuer_name="ScheduleManager")
+    # generate QR code as data URI
+    try:
+        import qrcode
+        import io
+        buf = io.BytesIO()
+        img = qrcode.make(uri)
+        img.save(buf, "PNG")
+        data = buf.getvalue()
+        import base64
+        data_uri = 'data:image/png;base64,' + base64.b64encode(data).decode()
+    except Exception:
+        data_uri = None
+    return render_template('auth/2fa_setup.html', secret=secret, uri=uri, qr_data_uri=data_uri)
+
+
+@auth_bp.route('/2fa/backup', methods=['POST'])
+@login_required
+def two_factor_backup():
+    # generate and show backup codes (plaintext only once)
+    codes = current_user.generate_backup_codes()
+    return render_template('auth/2fa_backup.html', codes=codes)
+
+
+@auth_bp.route('/2fa/verify', methods=['GET', 'POST'])
+def two_factor_verify():
+    # Verify code from session-pending user during login or enablement flow
+    user_id = session.get('pending_2fa_user')
+    if not user_id:
+        # maybe verifying from account settings for logged-in user
+        if not current_user.is_authenticated:
+            flash('2FAの確認に失敗しました。', 'error')
+            return redirect(url_for('auth.login'))
+        user = current_user
+    else:
+        user = User.query.get(user_id)
+        if not user:
+            flash('ログイン情報が見つかりません。', 'error')
+            return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        code = request.form.get('code')
+        totp = pyotp.TOTP(user.two_factor_secret or '')
+        if code and totp.verify(code):
+            # if coming from login flow, finalize login
+            if session.get('pending_2fa_user'):
+                session.pop('pending_2fa_user', None)
+                login_user(user)
+                return redirect(url_for('events.calendar'))
+            # otherwise enable 2FA for current_user
+            user.two_factor_enabled = True
+            db.session.add(user)
+            db.session.commit()
+            flash('二要素認証を有効化しました。', 'success')
+            return redirect(url_for('events.calendar'))
+        else:
+            flash('2FAコードが無効です。再試行してください。', 'error')
+    return render_template('auth/2fa_verify.html')
+
+
+@auth_bp.route('/2fa/disable', methods=['GET', 'POST'])
+@login_required
+def two_factor_disable():
+    # Allow disabling 2FA by verifying current TOTP or a backup code
+    if request.method == 'POST':
+        code = request.form.get('code')
+        password = request.form.get('password')
+        # require password confirmation
+        if not password or not current_user.check_password(password):
+            flash('パスワードが正しくありません。無効化するにはパスワードで再認証してください。', 'error')
+            return render_template('auth/2fa_disable.html')
+        # TOTP verify first
+        if current_user.two_factor_secret:
+            totp = pyotp.TOTP(current_user.two_factor_secret)
+            if code and totp.verify(code):
+                # disable
+                current_user.two_factor_enabled = False
+                current_user.two_factor_secret = None
+                current_user.two_factor_backup_codes = None
+                db.session.add(current_user)
+                db.session.commit()
+                flash('二要素認証を無効にしました。', 'success')
+                return redirect(url_for('events.calendar'))
+        # try backup code
+        if code and current_user.verify_and_consume_backup_code(code):
+            current_user.two_factor_enabled = False
+            current_user.two_factor_secret = None
+            current_user.two_factor_backup_codes = None
+            db.session.add(current_user)
+            db.session.commit()
+            flash('二要素認証を無効にしました（バックアップコード使用）。', 'success')
+            return redirect(url_for('events.calendar'))
+        flash('コードが無効です。', 'error')
+    return render_template('auth/2fa_disable.html')

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>外部連携</h1>
+<p>外部サービスと連携してカレンダーやタスクを同期できます。</p>
+<h2>接続済みアカウント</h2>
+<table>
+  <thead><tr><th>プロバイダ</th><th>外部ID</th><th>作成日</th><th>操作</th></tr></thead>
+  <tbody>
+  {% for a in accounts %}
+    <tr>
+      <td>{{ a.provider }}</td>
+      <td>{{ a.external_id or '-' }}</td>
+      <td>{{ a.created_at }}</td>
+      <td>
+        <form method="post" action="{{ url_for('integrations.disconnect', account_id=a.id) }}" style="display:inline">
+          <button type="submit">切断</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4">接続されたアカウントはありません。</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>新しく連携する</h2>
+<ul>
+  <li><a href="{{ url_for('integrations_google.oauth_connect') }}">Google Calendar と連携</a></li>
+  <!-- Add other providers here -->
+</ul>
+{% endblock %}

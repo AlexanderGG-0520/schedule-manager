@@ -7,6 +7,11 @@
   <p>{{ form.description.label }} {{ form.description(cols=40, rows=4) }}</p>
   <p>{{ form.start_at.label }} {{ form.start_at() }}</p>
   <p>{{ form.end_at.label }} {{ form.end_at() }}</p>
+  <p>{{ form.location.label }} {{ form.location(size=40) }}</p>
+  <p>{{ form.participants.label }} {{ form.participants(size=60) }} <small>カンマ区切りで入力</small></p>
+  <p>{{ form.category.label }} {{ form.category(size=30) }}</p>
+  <p>{{ form.rrule.label }} {{ form.rrule(size=60) }} <small>例: FREQ=WEEKLY;BYDAY=MO,WE,FR</small></p>
+  <p>{{ form.timezone.label }} {{ form.timezone(size=40) }} <small>例: Asia/Tokyo</small></p>
   <p>{{ form.color.label }} {{ form.color(size=10) }}</p>
   <p>{{ form.organization_id.label }} {{ form.organization_id() }}</p>
   <p><button type="submit">更新</button></p>
