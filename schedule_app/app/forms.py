@@ -2,6 +2,7 @@ from __future__ import annotations
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField
 from wtforms.fields import DateTimeLocalField
+from wtforms import SelectField
 from wtforms.validators import DataRequired, Length, Email, Optional
 
 class RegisterForm(FlaskForm):
@@ -20,7 +21,16 @@ class EventForm(FlaskForm):
     start_at = DateTimeLocalField("start_at", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
     end_at = DateTimeLocalField("end_at", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
     color = StringField("color", validators=[DataRequired(), Length(min=4, max=7)])
+    organization_id = SelectField("organization_id", choices=[], coerce=int, validators=[Optional()])
 
 
 class ResendConfirmationForm(FlaskForm):
     email = StringField("email", validators=[DataRequired(), Email(), Length(max=255)])
+
+
+class OrganizationForm(FlaskForm):
+    name = StringField("name", validators=[DataRequired(), Length(min=2, max=128)])
+
+
+class InviteMemberForm(FlaskForm):
+    username = StringField("username", validators=[DataRequired(), Length(min=3, max=80)])

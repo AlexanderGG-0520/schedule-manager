@@ -61,10 +61,12 @@ def create_app(config=None):
 
     from .auth.routes import auth_bp
     from .events.routes import events_bp
+    from .organizations.routes import org_bp
     from .api.v1 import api_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(events_bp)
+    app.register_blueprint(org_bp)
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
     # Register CLI commands (scheduler)

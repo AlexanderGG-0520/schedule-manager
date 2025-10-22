@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>組織一覧</h2>
+<a href="{{ url_for('organizations.create_org') }}">組織を作成</a>
+<ul>
+  {% for o in orgs %}
+  <li>
+    <strong>{{ o.name }}</strong>
+    - メンバー数: {{ o.members|length }}
+    - <a href="{{ url_for('organizations.view_org', org_id=o.id) }}">表示</a>
+  </li>
+  {% else %}
+  <li>組織はありません。</li>
+  {% endfor %}
+</ul>
+{% endblock %}

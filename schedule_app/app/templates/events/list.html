@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>イベント一覧</h2>
+<a href="{{ url_for('events.create_event') }}">イベントを作成</a>
+<ul>
+  {% for e in events %}
+  <li>
+    <strong>{{ e.title }}</strong> ({{ e.start_at }} - {{ e.end_at }})
+    {% if e.organization %} [組織: {{ e.organization.name }}] {% endif %}
+    - <a href="{{ url_for('events.edit_event', event_id=e.id) }}">編集</a>
+    <form action="{{ url_for('events.delete_event', event_id=e.id) }}" method="post" style="display:inline">
+      <button type="submit">削除</button>
+    </form>
+  </li>
+  {% else %}
+  <li>イベントはまだありません。</li>
+  {% endfor %}
+</ul>
+{% endblock %}

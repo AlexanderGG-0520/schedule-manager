@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>組織: {{ org.name }}</h2>
+<p>メンバー:</p>
+<ul>
+  {% for m in org.members %}
+  <li>{{ m.username }} ({{ m.email }})</li>
+  {% endfor %}
+</ul>
+<form method="post" action="{{ url_for('organizations.invite_member', org_id=org.id) }}">
+  {{ invite_form.hidden_tag() }}
+  <p>{{ invite_form.username.label }} {{ invite_form.username(size=30) }}</p>
+  <p><button type="submit">招待</button></p>
+</form>
+{% endblock %}

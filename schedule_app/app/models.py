@@ -21,6 +21,12 @@ class User(UserMixin, db.Model):
     last_confirmation_sent_at = db.Column(db.DateTime, nullable=True)
 
     events = db.relationship("Event", back_populates="user", cascade="all, delete-orphan")
+    # organizations the user belongs to (many-to-many)
+    organizations = db.relationship(
+        "Organization",
+        secondary="organization_members",
+        back_populates="members",
+    )
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -56,3 +62,46 @@ class Event(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     user = db.relationship("User", back_populates="events")
+    # Optional organization the event belongs to (shared within organization)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=True, index=True)
+    organization = db.relationship("Organization", back_populates="events")
+
+
+class Organization(db.Model):
+    __tablename__ = "organizations"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    # Members relationship via association table
+    members = db.relationship(
+        "User",
+        secondary="organization_members",
+        back_populates="organizations",
+    )
+
+    events = db.relationship("Event", back_populates="organization", cascade="all, delete-orphan")
+
+
+# Association table for organization memberships with role
+class OrganizationMember(db.Model):
+    __tablename__ = "organization_members"
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), primary_key=True)
+    role = db.Column(db.String(20), nullable=False, default="member")  # member or admin
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class Invitation(db.Model):
+    __tablename__ = "invitations"
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), nullable=False, index=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
+    invited_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default="member")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    accepted = db.Column(db.Boolean, default=False, nullable=False)
+    accepted_at = db.Column(db.DateTime, nullable=True)
+
+    organization = db.relationship("Organization", backref="invitations")

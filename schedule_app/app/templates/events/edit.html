@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>イベント編集</h2>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <p>{{ form.title.label }} {{ form.title(size=40) }}</p>
+  <p>{{ form.description.label }} {{ form.description(cols=40, rows=4) }}</p>
+  <p>{{ form.start_at.label }} {{ form.start_at() }}</p>
+  <p>{{ form.end_at.label }} {{ form.end_at() }}</p>
+  <p>{{ form.color.label }} {{ form.color(size=10) }}</p>
+  <p>{{ form.organization_id.label }} {{ form.organization_id() }}</p>
+  <p><button type="submit">更新</button></p>
+</form>
+{% endblock %}

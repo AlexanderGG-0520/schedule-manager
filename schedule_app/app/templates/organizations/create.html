@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>組織作成</h2>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <p>{{ form.name.label }} {{ form.name(size=40) }}</p>
+  <p><button type="submit">作成</button></p>
+</form>
+{% endblock %}
