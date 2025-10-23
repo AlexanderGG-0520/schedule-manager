@@ -12,6 +12,13 @@ def calendar():
     return render_template("calendar.html")
 
 
+@events_bp.route('/dashboard')
+@login_required
+def dashboard():
+    # Simple dashboard with links to features and embedded calendar
+    return render_template('dashboard.html')
+
+
 from flask import request, redirect, url_for, flash, current_app
 from ..models import Event, Organization, OrganizationMember, User
 from .. import db
@@ -53,7 +60,8 @@ def list_events():
     else:
         # personal events
         events = Event.query.filter_by(user_id=current_user.id, organization_id=None).order_by(Event.start_at).all()
-    return render_template("events/list.html", events=events)
+    # render the calendar UI for event lists (calendar will call /api/v1/events)
+    return render_template("calendar.html")
 
 
 

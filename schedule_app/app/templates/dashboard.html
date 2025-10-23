@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>ダッシュボード</h2>
+<p>以下から機能へアクセスできます:</p>
+<ul>
+  <li><a href="{{ url_for('events.list_events') }}">カレンダー / 予定を見る</a></li>
+  <li><a href="{{ url_for('events.create_event') }}">予定を作成</a></li>
+  <li><a href="{{ url_for('organizations.index') }}">組織管理</a></li>
+  <li><a href="{{ url_for('integrations.routes') }}">連携設定</a></li>
+</ul>
+<hr>
+<div id="dashboard-calendar">
+  {% include 'calendar.html' %}
+</div>
+{% endblock %}
