@@ -1,14 +1,4 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="controls">
-  <button id="prev">◀</button>
-  <button id="next">▶</button>
-  <select id="view-mode">
-    <option value="month">月</option>
-    <option value="week">週</option>
-    <option value="day">日</option>
-  </select>
-  <input id="search" placeholder="検索" />
-</div>
-<div id="calendar-root" class="calendar"></div>
+  {% include 'calendar_partial.html' %}
 {% endblock %}

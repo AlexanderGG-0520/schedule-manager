@@ -35,6 +35,14 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neu
 .btn.primary { background:#0b5; color:#fff; border:none; }
 .btn.link { background:transparent; color:#0b5; border:1px solid transparent; }
 
+/* Dashboard action buttons */
+.dashboard-actions { display:flex; gap:12px; padding:12px 0; flex-wrap:wrap; }
+.dashboard-actions .btn { background:#fff; color:#0b5; border:1px solid #0b5; box-shadow:0 1px 2px rgba(0,0,0,0.05); }
+.dashboard-actions .btn.primary { background:#0b5; color:#fff; border:none; }
+
+/* Reduce big horizontal rule spacing */
+hr { border:0; border-top:1px solid #ddd; margin:12px 0; }
+
 @media (max-width:600px) {
 	.auth-container { padding:12px; margin:12px; }
 	.form-actions { flex-direction:column; align-items:stretch; }
@@ -55,3 +63,16 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neu
   .calendar-cell { min-height:80px; padding:4px; }
   .calendar-day-num { font-size:11px; }
 }
+
+/* More button and modal */
+.more-btn { background:transparent; border:none; color:#0b5; cursor:pointer; padding:4px 6px; font-size:13px; }
+.more-wrap { margin-top:6px; }
+.events-modal { display:none; }
+.events-modal.open { display:block; }
+.events-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.4); }
+.events-modal-dialog { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; padding:16px; border-radius:8px; max-width:640px; width:90%; box-shadow:0 6px 18px rgba(0,0,0,0.2); }
+.events-modal-close { position:absolute; right:8px; top:8px; border:none; background:transparent; font-size:16px; cursor:pointer; }
+.events-modal-content h3 { margin-top:0; }
+.modal-event-list { list-style:none; padding:0; margin:8px 0 0 0; }
+.modal-event { padding:8px; border-bottom:1px solid #eee; }
+.modal-event-meta { font-size:12px; color:#666; }

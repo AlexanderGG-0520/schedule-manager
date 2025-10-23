@@ -183,6 +183,44 @@ async function renderCalendar() {
   }
 
   // day view
+
+// Modal helper: create or reuse modal element and populate with events
+function openEventsModal(year, month, date, evs) {
+  let modal = document.getElementById('events-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'events-modal';
+    modal.className = 'events-modal';
+    modal.innerHTML = `
+      <div class="events-modal-backdrop"></div>
+      <div class="events-modal-dialog" role="dialog" aria-modal="true">
+        <button class="events-modal-close" aria-label="閉じる">✕</button>
+        <div class="events-modal-content"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('.events-modal-close').addEventListener('click', closeEventsModal);
+    modal.querySelector('.events-modal-backdrop').addEventListener('click', closeEventsModal);
+  }
+  const title = `${year}/${String(month + 1).padStart(2, '0')}/${String(date).padStart(2, '0')} の予定`;
+  const content = modal.querySelector('.events-modal-content');
+  content.innerHTML = `<h3>${title}</h3>`;
+  const ul = document.createElement('ul');
+  ul.className = 'modal-event-list';
+  for (const e of evs) {
+    const li = document.createElement('li');
+    li.className = 'modal-event';
+    li.innerHTML = `<strong>${new Date(e.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong> ${e.title}<div class="modal-event-meta">${e.location || ''}</div>`;
+    ul.appendChild(li);
+  }
+  content.appendChild(ul);
+  modal.classList.add('open');
+}
+
+function closeEventsModal() {
+  const modal = document.getElementById('events-modal');
+  if (modal) modal.classList.remove('open');
+}
   const day = startOfDay(start);
   const key = day.getFullYear() + '-' + String(day.getMonth()+1).padStart(2,'0') + '-' + String(day.getDate()).padStart(2,'0');
   const evs = buckets[key] || [];

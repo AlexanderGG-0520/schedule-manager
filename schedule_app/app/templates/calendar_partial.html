@@ -1,0 +1,14 @@
+{%-- Partial calendar content (no extends) so it can be embedded in dashboard --%}
+<div class="calendar-section">
+  <div class="controls">
+    <button id="prev" class="btn">◀</button>
+    <button id="next" class="btn">▶</button>
+    <select id="view-mode" aria-label="表示モード">
+      <option value="month">月</option>
+      <option value="week">週</option>
+      <option value="day">日</option>
+    </select>
+    <input id="search" placeholder="検索" />
+  </div>
+  <div id="calendar-root" class="calendar"></div>
+</div>
