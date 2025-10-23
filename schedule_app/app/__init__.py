@@ -84,25 +84,30 @@ def create_app(config=None):
     from .events.routes import events_bp
     from .organizations.routes import org_bp
     from .api.v1 import api_bp
-    # Integrations (optional)
+    # Integrations (optional) - register each integrations blueprint if its module is importable
+    try:
+        from .integrations.routes import integrations_bp
+
+        app.register_blueprint(integrations_bp)
+    except Exception:
+        # integrations routes are optional
+        pass
+
     try:
         from .integrations.google import google_bp
+
         app.register_blueprint(google_bp)
     except Exception:
-        # integrations are optional
+        # google integration optional
         pass
-        try:
-            from .integrations.routes import integrations_bp
 
-            app.register_blueprint(integrations_bp)
-        except Exception:
-            pass
-        try:
-            from .integrations.outlook import outlook_bp
+    try:
+        from .integrations.outlook import outlook_bp
 
-            app.register_blueprint(outlook_bp)
-        except Exception:
-            pass
+        app.register_blueprint(outlook_bp)
+    except Exception:
+        # outlook integration optional
+        pass
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(events_bp)
