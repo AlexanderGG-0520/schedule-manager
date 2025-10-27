@@ -10,7 +10,7 @@
 <body>
   <header>
     <nav class="site-nav">
-      <a class="nav-brand" href="{{ url_for('events.calendar') }}">スケジュール</a>
+  <a class="nav-brand" href="{{ url_for('events.index') }}">スケジュール</a>
       <div class="nav-links">
         <form id="lang-form" method="post" action="{{ url_for('auth.set_language') }}" style="display:inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

@@ -218,7 +218,7 @@ def login():
             pending = session.pop("pending_invite", None)
             if pending:
                 return redirect(url_for("organizations.accept_invite", token=pending))
-            return redirect(url_for("events.dashboard"))
+            return redirect(url_for("events.index"))
         flash("認証に失敗しました。", "error")
     return render_template("auth/login.html", form=form)
 
@@ -290,7 +290,7 @@ def two_factor_verify():
             if session.get('pending_2fa_user'):
                 session.pop('pending_2fa_user', None)
                 login_user(user)
-                return redirect(url_for('events.dashboard'))
+                return redirect(url_for('events.index'))
             # otherwise enable 2FA for current_user
             user.two_factor_enabled = True
             db.session.add(user)

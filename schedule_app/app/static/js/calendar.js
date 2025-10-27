@@ -81,7 +81,7 @@ async function renderCalendar() {
     const p = document.createElement("p");
     p.textContent = "予定はありません。";
     root.appendChild(p);
-    return;
+    // continue and render an empty calendar grid so layout is visible
   }
 
   // group events by date (YYYY-MM-DD)
