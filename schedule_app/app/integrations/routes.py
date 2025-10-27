@@ -1,7 +1,8 @@
 from __future__ import annotations
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from ..models import ExternalAccount
+from sqlalchemy import exc as sa_exc
 from .. import db
 from flask import request, send_file
 from ..models import Event
@@ -20,7 +21,13 @@ integrations_bp = Blueprint("integrations", __name__, template_folder="../../sch
 @login_required
 def index():
     # list connected external accounts for current user
-    accounts = ExternalAccount.query.filter_by(user_id=current_user.id).all()
+    try:
+        accounts = ExternalAccount.query.filter_by(user_id=current_user.id).all()
+    except sa_exc.ProgrammingError:
+        # Likely the external_accounts table doesn't exist yet (migration not applied).
+        current_app.logger.exception("integrations.index: database table missing or programming error")
+        flash("連携テーブルがまだセットアップされていません。管理者に連絡してください。", "error")
+        accounts = []
     return render_template("integrations/index.html", accounts=accounts)
 
 
