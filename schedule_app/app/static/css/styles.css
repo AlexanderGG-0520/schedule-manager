@@ -76,3 +76,28 @@ hr { border:0; border-top:1px solid #ddd; margin:12px 0; }
 .modal-event-list { list-style:none; padding:0; margin:8px 0 0 0; }
 .modal-event { padding:8px; border-bottom:1px solid #eee; }
 .modal-event-meta { font-size:12px; color:#666; }
+
+/* Event form improvements */
+.event-form { max-width:820px; margin:18px auto; padding:18px; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.03); }
+.event-form h2 { margin-top:0; }
+.event-form .form-row { margin-bottom:12px; }
+.event-form label { display:block; font-weight:600; margin-bottom:6px; color:#333; }
+.event-form .input { width:100%; box-sizing:border-box; }
+.grid-two { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.grid-three { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+.help-text { font-size:12px; color:#666; margin-top:6px; }
+.btn.primary { background:var(--accent); color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
+.color-input { width:56px; height:36px; padding:2px; }
+
+@media (max-width:800px) {
+	.grid-two, .grid-three { grid-template-columns:1fr; }
+}
+
+/* Organization pages */
+.member-list { list-style:none; padding:0; margin:8px 0 16px 0; border:1px solid #eee; border-radius:6px; background:#fafafa; }
+.member-item { padding:10px 12px; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center; }
+.member-item:last-child { border-bottom:0; }
+.member-meta { font-size:14px; color:#333; }
+.invite-form { display:flex; gap:8px; align-items:center; margin-top:8px; }
+.invite-form .input { flex:1; }
+.small-btn { padding:6px 8px; border-radius:6px; }

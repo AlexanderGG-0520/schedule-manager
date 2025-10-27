@@ -1,9 +1,17 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>組織作成</h2>
-<form method="post">
-  {{ form.hidden_tag() }}
-  <p>{{ form.name.label }} {{ form.name(size=40) }}</p>
-  <p><button type="submit">作成</button></p>
-</form>
+<div class="event-form">
+  <h2>組織作成</h2>
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="form-row">
+      <label for="{{ form.name.id }}">組織名</label>
+      {{ form.name(class='input', size=60) }}
+    </div>
+    <div class="form-row form-actions">
+      <button type="submit" class="btn primary">作成</button>
+      <a href="{{ url_for('organizations.list_orgs') }}" class="btn">キャンセル</a>
+    </div>
+  </form>
+</div>
 {% endblock %}

@@ -1,15 +1,35 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>組織: {{ org.name }}</h2>
-<p>メンバー:</p>
-<ul>
-  {% for m in org.members %}
-  <li>{{ m.username }} ({{ m.email }})</li>
-  {% endfor %}
-</ul>
-<form method="post" action="{{ url_for('organizations.invite_member', org_id=org.id) }}">
-  {{ invite_form.hidden_tag() }}
-  <p>{{ invite_form.username.label }} {{ invite_form.username(size=30) }}</p>
-  <p><button type="submit">招待</button></p>
-</form>
+<div class="event-form">
+  <h2>組織: {{ org.name }}</h2>
+
+  <h3>メンバー</h3>
+  <ul class="member-list">
+    {% for m in org.members %}
+    <li class="member-item">
+      <div class="member-meta">{{ m.username }} ({{ m.email }})</div>
+      <div>
+        {% if m != current_user %}
+        <form method="post" action="{{ url_for('organizations.remove_member', org_id=org.id, user_id=m.id) }}" style="display:inline">
+          {{ csrf_token() }}
+          <button type="submit" class="btn small-btn">削除</button>
+        </form>
+        {% else %}
+        <span class="help-text">あなた</span>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+    {% if not org.members %}
+    <li class="member-item">メンバーはまだいません。</li>
+    {% endif %}
+  </ul>
+
+  <h3>メンバーを招待</h3>
+  <form method="post" action="{{ url_for('organizations.invite_member', org_id=org.id) }}" class="invite-form">
+    {{ invite_form.hidden_tag() }}
+    {{ invite_form.username(class='input') }}
+    <button type="submit" class="btn primary">招待</button>
+  </form>
+</div>
 {% endblock %}
