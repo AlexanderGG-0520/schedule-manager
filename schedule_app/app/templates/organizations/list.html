@@ -1,16 +1,33 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>組織一覧</h2>
-<a href="{{ url_for('organizations.create_org') }}">組織を作成</a>
-<ul>
-  {% for o in orgs %}
-  <li>
-    <strong>{{ o.name }}</strong>
-    - メンバー数: {{ o.members|length }}
-    - <a href="{{ url_for('organizations.view_org', org_id=o.id) }}">表示</a>
-  </li>
+<div class="event-form">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h2 style="margin:0">組織一覧</h2>
+    <a class="btn primary" href="{{ url_for('organizations.create_org') }}">組織を作成</a>
+  </div>
+
+  {% if orgs|length %}
+  <div class="org-list" style="margin-top:12px; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px">
+    {% for o in orgs %}
+    <div class="org-card" style="border:1px solid #eee; padding:12px; border-radius:8px; background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700; font-size:16px">{{ o.name }}</div>
+          <div class="help-text">メンバー: {{ o.members|length }}</div>
+        </div>
+        <div style="text-align:right">
+          <a class="btn" href="{{ url_for('organizations.view_org', org_id=o.id) }}">表示</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
   {% else %}
-  <li>組織はありません。</li>
-  {% endfor %}
-</ul>
+  <div style="margin-top:18px"> 
+    <p>組織はまだ作成されていません。</p>
+    <p><a class="btn primary" href="{{ url_for('organizations.create_org') }}">組織を作成する</a></p>
+  </div>
+  {% endif %}
+</div>
+
 {% endblock %}
