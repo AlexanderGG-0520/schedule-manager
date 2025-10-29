@@ -3,7 +3,13 @@
 <div class="invite-landing">
   <h2>{{ org.name if org else '招待' }}</h2>
   <p>あなたは <strong>{{ org.name if org else 'この組織' }}</strong> への参加招待を受け取りました。</p>
-  <p>招待者: {% if inviter_username %}{{ inviter_username }}{% else %}不明{% endif %}{% if inviter_email %}（{{ inviter_email }}）{% endif %}</p>
+  <p>招待者: {% if inviter_username %}
+    {% if inviter_id %}
+      <a href="{{ url_for('auth.user_profile', user_id=inviter_id) }}">{{ inviter_username }}</a>
+    {% else %}
+      {{ inviter_username }}
+    {% endif %}
+    {% else %}不明{% endif %}{% if inviter_email %}（<a href="mailto:{{ inviter_email }}">{{ inviter_email }}</a>）{% endif %}</p>
   <p>続行するにはログインまたは新規登録してください。ログイン後、招待は自動的に処理されます。</p>
   <div class="invite-actions">
     <a class="btn primary" href="{{ url_for('auth.login') }}">ログインして参加する</a>

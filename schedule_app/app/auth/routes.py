@@ -430,3 +430,11 @@ def reset_username():
             current_app.logger.exception('ユーザー名更新中にエラー')
             flash('ユーザー名の更新に失敗しました。管理者に連絡してください。', 'error')
     return render_template('auth/reset_username.html', form=form, current_username=user.username)
+
+
+@auth_bp.route('/users/<int:user_id>')
+def user_profile(user_id: int):
+    """Simple profile page showing public information about a user."""
+    user = User.query.get_or_404(user_id)
+    # For now show username and email; this can be extended later
+    return render_template('auth/profile.html', user=user)

@@ -97,8 +97,16 @@ def invite_member(org_id: int):
                 serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
                 token = serializer.dumps({"inv_id": inv.id}, salt=current_app.config.get("SECURITY_PASSWORD_SALT"))
                 accept_url = url_for("organizations.accept_invite", token=token, _external=True)
+                # landing_url: link to app root where users can learn more (better UX)
+                landing_url = url_for("events.index", _external=True)
                 subject = f"{org.name} への招待"
-                body = f"{org.name} への参加招待を受け取りました。以下のリンクをクリックして参加してください:\n\n{accept_url}\n\nこのリンクは1時間で無効になります。"
+                body = (
+                    f"{org.name} への参加招待を受け取りました。\n\n"
+                    f"この招待は下のリンクから受け取れます（ログインしていない場合は招待ランディングページが表示されます）。:\n\n"
+                    f"招待リンク: {accept_url}\n\n"
+                    f"招待について詳しくは: {landing_url}\n\n"
+                    f"この招待リンクは1時間で無効になります。"
+                )
                 send_email(subject, str(email), body)
                 flash("招待メールを送信しました。受信トレイを確認してください。", "success")
             except SQLAlchemyError:
@@ -189,7 +197,11 @@ def accept_invite(token: str):
         inviter_name = inviter.username if inviter else None
         inviter_email = inviter.email if inviter else None
         return render_template(
-            "organizations/accept_landing.html", org=org, inviter_username=inviter_name, inviter_email=inviter_email
+            "organizations/accept_landing.html",
+            org=org,
+            inviter_username=inviter_name,
+            inviter_email=inviter_email,
+            inviter_id=inv.invited_by,
         )
     user_obj = cast(UserModel, current_user._get_current_object())
     # create membership if not exists

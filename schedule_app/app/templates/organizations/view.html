@@ -10,9 +10,9 @@
       <div class="member-meta">{{ m.username }} ({{ m.email }})</div>
       <div>
         {% if m != current_user %}
-        <form method="post" action="{{ url_for('organizations.remove_member', org_id=org.id, user_id=m.id) }}" style="display:inline" class="remove-member-form">
+        <form method="post" action="{{ url_for('organizations.remove_member', org_id=org.id, user_id=m.id) }}" style="display:inline" class="remove-member-form" data-member-id="{{ m.id }}">
           {{ csrf_token() }}
-          <button type="submit" class="btn small-btn">削除</button>
+          <button type="button" class="btn small-btn btn-remove" data-bs-toggle="modal" data-bs-target="#removeConfirmModal" data-member-id="{{ m.id }}">削除</button>
         </form>
         {% else %}
         <span class="help-text">あなた</span>
@@ -33,44 +33,40 @@
   </form>
 </div>
 <!-- Removal confirmation: prefer Bootstrap modal if available, otherwise use a lightweight fallback modal -->
-<div id="removeConfirmModal" class="modal" style="display:none; position:fixed; left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
-  <div class="modal-dialog" style="background:#fff;padding:1rem;border-radius:6px;max-width:480px;margin:auto;">
-    <h3>メンバーを削除しますか？</h3>
-    <p>この操作は取り消せません。本当に削除しますか？</p>
-    <div style="text-align:right;margin-top:1rem;">
-      <button id="cancelRemove" class="btn">キャンセル</button>
-      <button id="confirmRemove" class="btn primary">削除する</button>
+<!-- Bootstrap modal (official markup) -->
+<div class="modal fade" id="removeConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">メンバーを削除しますか？</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>この操作は取り消せません。本当に削除しますか？</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">キャンセル</button>
+        <button id="confirmRemove" type="button" class="btn btn-danger">削除する</button>
+      </div>
     </div>
   </div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const forms = document.querySelectorAll('.remove-member-form');
   let activeForm = null;
-  // attach click handler to buttons to open modal
-  forms.forEach(function(f) {
-    const btn = f.querySelector('button[type=submit]');
-    if (!btn) return;
+  document.querySelectorAll('.btn-remove').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      activeForm = f;
-      // if bootstrap modal available, use it
-      if (window.bootstrap && typeof window.bootstrap.Modal === 'function') {
-        const modalEl = document.getElementById('removeConfirmModal');
-        const m = new window.bootstrap.Modal(modalEl);
-        modalEl.style.display = 'flex';
-        m.show();
-        // when confirmed, submit
-        document.getElementById('confirmRemove').onclick = function() { m.hide(); activeForm.submit(); };
-        document.getElementById('cancelRemove').onclick = function() { m.hide(); };
-      } else {
-        // fallback: show our simple modal
-        const modal = document.getElementById('removeConfirmModal');
-        modal.style.display = 'flex';
-        document.getElementById('confirmRemove').onclick = function() { modal.style.display='none'; activeForm.submit(); };
-        document.getElementById('cancelRemove').onclick = function() { modal.style.display='none'; activeForm = null; };
-      }
+      // locate form nearest to this button
+      activeForm = btn.closest('form');
+      // The modal is shown by data-bs attributes; nothing else to do here
     });
+  });
+
+  const confirm = document.getElementById('confirmRemove');
+  confirm.addEventListener('click', function() {
+    if (activeForm) {
+      activeForm.submit();
+    }
   });
 });
 </script>

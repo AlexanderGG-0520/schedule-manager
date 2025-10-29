@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="profile">
+  <h2>{{ user.username }}</h2>
+  <p>メール: <a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
+  <p>アカウント作成: {{ user.created_at }}</p>
+  <a class="btn" href="{{ url_for('events.index') }}">戻る</a>
+</div>
+{% endblock %}
