@@ -114,6 +114,15 @@ def create_app(config=None):
     app.register_blueprint(org_bp)
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
+    # Tasks (ToDo) blueprint
+    try:
+        from .tasks.routes import tasks_bp
+
+        app.register_blueprint(tasks_bp)
+    except Exception:
+        # If tasks blueprint import fails, continue silently
+        pass
+
     # Register CLI commands (scheduler)
     try:
         from .cli import scheduler_cli

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="tasks-container">
+  <h1>ToDo</h1>
+  <form method="post" action="{{ url_for('tasks.create') }}" class="task-form">
+    {{ form.hidden_tag() }}
+    {{ form.title(class='input', placeholder='新しいタスクを入力') }}
+    <button class="btn primary" type="submit">追加</button>
+  </form>
+
+  <ul class="task-list">
+    {% for t in tasks %}
+      <li class="task{% if t.completed %} completed{% endif %}">
+        <form method="post" action="{{ url_for('tasks.toggle', task_id=t.id) }}" style="display:inline">
+          {{ form.csrf_token }}
+          <button class="btn small" type="submit">{% if t.completed %}戻す{% else %}完了{% endif %}</button>
+        </form>
+        <span class="task-title">{{ t.title }}</span>
+        <form method="post" action="{{ url_for('tasks.delete', task_id=t.id) }}" style="display:inline;margin-left:8px">
+          {{ form.csrf_token }}
+          <button class="btn danger small" type="submit">削除</button>
+        </form>
+      </li>
+    {% else %}
+      <li>タスクがありません。</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

@@ -44,3 +44,7 @@ class OrganizationForm(FlaskForm):
 
 class InviteMemberForm(FlaskForm):
     username = StringField("username", validators=[DataRequired(), Length(min=3, max=80)])
+
+
+class TaskForm(FlaskForm):
+    title = StringField("title", validators=[DataRequired(), Length(min=1, max=255)])

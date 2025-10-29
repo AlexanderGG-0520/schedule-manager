@@ -16,5 +16,7 @@ cryptography==41.0.2
 icalendar==4.1
 pyotp==2.9.0
 qrcode==7.3.1
-Pillow==10.1.0
-Flask-Babel==3.1.0
+# Pillow 10.x may not provide a Windows wheel for Python 3.13 on all platforms;
+# pin to 9.5.0 which has broader prebuilt wheel availability on Windows.
+pillow==9.5.0
+flask-babel==3.1.0

@@ -20,6 +20,7 @@
           </select>
         </form>
         <button id="theme-toggle" aria-label="テーマ切替">テーマ</button>
+        <a href="{{ url_for('tasks.index') }}">ToDo</a>
         {% if current_user.is_authenticated %}
           <span class="nav-user">{{ current_user.username }}</span>
           <a href="{{ url_for('auth.logout') }}">ログアウト</a>
