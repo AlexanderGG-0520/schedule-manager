@@ -5,6 +5,7 @@ from .. import db
 from ..models import User
 from ..forms import RegisterForm, LoginForm
 from ..forms import RegisterForm, LoginForm, ResetPasswordForm, ResendConfirmationForm
+from ..forms import ResetUsernameForm
 from typing import cast
 import smtplib
 from email.message import EmailMessage
@@ -387,3 +388,45 @@ def two_factor_disable():
             return redirect(url_for('events.calendar'))
         flash('コードが無効です。', 'error')
     return render_template('auth/2fa_disable.html')
+
+
+@auth_bp.route('/account/reset-username', methods=['GET', 'POST'])
+@login_required
+def reset_username():
+    """Allow users who accidentally set a non-ASCII username to pick a new ASCII-only username.
+
+    This is available only to authenticated users. If the current username contains any
+    non-ASCII character, we show the form; otherwise we redirect back to account settings.
+    """
+    form = ResetUsernameForm()
+    user = current_user
+    # helper: detect non-ascii in username
+    def has_non_ascii(s: str) -> bool:
+        try:
+            s.encode('ascii')
+            return False
+        except Exception:
+            return True
+
+    if not has_non_ascii(user.username):
+        flash('現在のユーザー名は ASCII 文字のみです。リセットは不要です。', 'info')
+        return redirect(url_for('events.calendar'))
+
+    if form.validate_on_submit():
+        new = form.new_username.data
+        # uniqueness check
+        existing = User.query.filter_by(username=new).first()
+        if existing:
+            flash('そのユーザー名は既に使用されています。他を選んでください。', 'warning')
+            return render_template('auth/reset_username.html', form=form)
+        try:
+            user.username = new
+            db.session.add(user)
+            db.session.commit()
+            flash('ユーザー名を更新しました。新しいユーザー名でログイン状態が維持されます。', 'success')
+            return redirect(url_for('events.calendar'))
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('ユーザー名更新中にエラー')
+            flash('ユーザー名の更新に失敗しました。管理者に連絡してください。', 'error')
+    return render_template('auth/reset_username.html', form=form, current_username=user.username)

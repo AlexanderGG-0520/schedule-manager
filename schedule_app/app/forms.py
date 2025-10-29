@@ -70,3 +70,14 @@ class InviteMemberForm(FlaskForm):
 
 class TaskForm(FlaskForm):
     title = StringField("title", validators=[DataRequired(), Length(min=1, max=255)])
+
+
+class ResetUsernameForm(FlaskForm):
+    new_username = StringField(
+        "new_username",
+        validators=[
+            DataRequired(),
+            Length(min=3, max=80),
+            Regexp(r"^[A-Za-z0-9_.-]+$", message="ユーザー名には英数字と _ . - のみ使用できます。"),
+        ],
+    )
