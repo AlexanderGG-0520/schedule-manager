@@ -10,7 +10,7 @@
       <div class="member-meta">{{ m.username }} ({{ m.email }})</div>
       <div>
         {% if m != current_user %}
-        <form method="post" action="{{ url_for('organizations.remove_member', org_id=org.id, user_id=m.id) }}" style="display:inline">
+        <form method="post" action="{{ url_for('organizations.remove_member', org_id=org.id, user_id=m.id) }}" style="display:inline" class="remove-member-form">
           {{ csrf_token() }}
           <button type="submit" class="btn small-btn">削除</button>
         </form>
@@ -32,4 +32,46 @@
     <button type="submit" class="btn primary">招待</button>
   </form>
 </div>
+<!-- Removal confirmation: prefer Bootstrap modal if available, otherwise use a lightweight fallback modal -->
+<div id="removeConfirmModal" class="modal" style="display:none; position:fixed; left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+  <div class="modal-dialog" style="background:#fff;padding:1rem;border-radius:6px;max-width:480px;margin:auto;">
+    <h3>メンバーを削除しますか？</h3>
+    <p>この操作は取り消せません。本当に削除しますか？</p>
+    <div style="text-align:right;margin-top:1rem;">
+      <button id="cancelRemove" class="btn">キャンセル</button>
+      <button id="confirmRemove" class="btn primary">削除する</button>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const forms = document.querySelectorAll('.remove-member-form');
+  let activeForm = null;
+  // attach click handler to buttons to open modal
+  forms.forEach(function(f) {
+    const btn = f.querySelector('button[type=submit]');
+    if (!btn) return;
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      activeForm = f;
+      // if bootstrap modal available, use it
+      if (window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+        const modalEl = document.getElementById('removeConfirmModal');
+        const m = new window.bootstrap.Modal(modalEl);
+        modalEl.style.display = 'flex';
+        m.show();
+        // when confirmed, submit
+        document.getElementById('confirmRemove').onclick = function() { m.hide(); activeForm.submit(); };
+        document.getElementById('cancelRemove').onclick = function() { m.hide(); };
+      } else {
+        // fallback: show our simple modal
+        const modal = document.getElementById('removeConfirmModal');
+        modal.style.display = 'flex';
+        document.getElementById('confirmRemove').onclick = function() { modal.style.display='none'; activeForm.submit(); };
+        document.getElementById('cancelRemove').onclick = function() { modal.style.display='none'; activeForm = null; };
+      }
+    });
+  });
+});
+</script>
 {% endblock %}

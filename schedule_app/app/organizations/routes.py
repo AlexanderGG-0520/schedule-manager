@@ -103,6 +103,40 @@ def invite_member(org_id: int):
 
 
 
+@org_bp.route("/orgs/<int:org_id>/members/<int:user_id>/remove", methods=["POST"])
+@login_required
+def remove_member(org_id: int, user_id: int):
+    org = Organization.query.get_or_404(org_id)
+    # require that current_user is a member and has admin role (or is owner)
+    my_membership = OrganizationMember.query.filter_by(user_id=current_user.id, organization_id=org.id).first()
+    if not my_membership:
+        flash("この組織に対する権限がありません。", "error")
+        return redirect(url_for("organizations.list_orgs"))
+    if my_membership.role != "admin" and org.owner_id != current_user.id:
+        flash("メンバーの削除権限がありません。", "error")
+        return redirect(url_for("organizations.view_org", org_id=org.id))
+
+    # prevent removing the owner
+    if user_id == org.owner_id:
+        flash("オーナーは削除できません。", "error")
+        return redirect(url_for("organizations.view_org", org_id=org.id))
+
+    membership = OrganizationMember.query.filter_by(user_id=user_id, organization_id=org.id).first()
+    if not membership:
+        flash("対象ユーザーはメンバーではありません。", "info")
+        return redirect(url_for("organizations.view_org", org_id=org.id))
+    try:
+        db.session.delete(membership)
+        db.session.commit()
+        flash("メンバーを削除しました。", "success")
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.exception("メンバー削除中に DB エラー")
+        flash("メンバーの削除に失敗しました。", "error")
+    return redirect(url_for("organizations.view_org", org_id=org.id))
+
+
+
 @org_bp.route("/orgs/invite/accept/<token>")
 def accept_invite(token: str):
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
@@ -118,10 +152,24 @@ def accept_invite(token: str):
     inv = Invitation.query.get_or_404(inv_id)
     # If the user is logged in, associate; else ask to login/register
     if not current_user.is_authenticated:
-        # store token in session so we can process it after login
+        # store token in session so login flow can process it later
         session["pending_invite"] = token
-        flash("参加するにはログインしてください。ログイン後に招待が自動的に処理されます。", "info")
-        return redirect(url_for("auth.login"))
+        # render a friendly landing page explaining the invite and next steps
+        try:
+            org = Organization.query.get(inv.organization_id)
+        except Exception:
+            org = None
+        # resolve inviter username for friendlier display
+        inviter = None
+        try:
+            inviter = User.query.get(inv.invited_by)
+        except Exception:
+            inviter = None
+        inviter_name = inviter.username if inviter else None
+        inviter_email = inviter.email if inviter else None
+        return render_template(
+            "organizations/accept_landing.html", org=org, inviter_username=inviter_name, inviter_email=inviter_email
+        )
     user_obj = cast(UserModel, current_user._get_current_object())
     # create membership if not exists
     existing = OrganizationMember.query.filter_by(user_id=user_obj.id, organization_id=inv.organization_id).first()
