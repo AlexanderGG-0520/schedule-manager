@@ -21,6 +21,9 @@ def _get_oauth_config():
 @google_bp.route("/connect")
 def oauth_connect():
     client_id, _, redirect_uri = _get_oauth_config()
+    if not client_id:
+        current_app.logger.error("Google OAuth client id not configured (GOOGLE_OAUTH_CLIENT_ID missing)")
+        return "Google OAuth not configured on server", 500
     scope = "https://www.googleapis.com/auth/calendar"
     params = {
         "response_type": "code",
@@ -40,6 +43,9 @@ def oauth_callback():
     if not code:
         return "Missing code", 400
     client_id, client_secret, redirect_uri = _get_oauth_config()
+    if not client_id or not client_secret:
+        current_app.logger.error("Google OAuth client credentials missing (client_id=%s client_secret=%s)", bool(client_id), bool(client_secret))
+        return "Google OAuth not configured on server", 500
     token_url = "https://oauth2.googleapis.com/token"
     data = {
         "code": code,
