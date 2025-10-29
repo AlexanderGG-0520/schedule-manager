@@ -26,6 +26,12 @@ def list_orgs():
 def create_org():
     form = OrganizationForm()
     if form.validate_on_submit():
+        # Prevent duplicate organization names with a pre-check to give a friendly message
+        existing_org = Organization.query.filter_by(name=form.name.data).first()
+        if existing_org:
+            flash("同じ名前の組織が既に存在します。別の名前を選択してください。", "warning")
+            return render_template("organizations/create.html", form=form)
+
         org = Organization(name=form.name.data, owner_id=current_user.id)
         try:
             db.session.add(org)
@@ -68,6 +74,21 @@ def invite_member(org_id: int):
         if not user:
             # Create an email invitation record and send email with token
             email = str(form.username.data)
+            # If the input looks like an email address, validate its format before attempting to send
+            if "@" in email:
+                from wtforms.validators import Email as WTEmail
+                from wtforms.form import Form as WTForm
+                from wtforms import StringField
+                try:
+                    # Use a WTForms Email validator instance to perform a lightweight validation
+                    dummy_form = WTForm()
+                    dummy_field = StringField("email")
+                    dummy_field.data = email
+                    WTEmail()(dummy_form, dummy_field)
+                except Exception:
+                    flash("無効なメールアドレス形式です。正しいメールアドレスを入力してください。", "error")
+                    return redirect(url_for("organizations.view_org", org_id=org.id))
+
             inv = Invitation(email=email, organization_id=org.id, invited_by=current_user.id, role="member")
             try:
                 db.session.add(inv)

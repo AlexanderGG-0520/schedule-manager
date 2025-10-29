@@ -3,15 +3,30 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField
 from wtforms.fields import DateTimeLocalField
 from wtforms import SelectField
-from wtforms.validators import DataRequired, Length, Email, Optional
+from wtforms.validators import DataRequired, Length, Email, Optional, Regexp
 
 class RegisterForm(FlaskForm):
-    username = StringField("username", validators=[DataRequired(), Length(min=3, max=80)])
+    # username: allow ASCII letters, digits, underscore, hyphen and dot
+    username = StringField(
+        "username",
+        validators=[
+            DataRequired(),
+            Length(min=3, max=80),
+            Regexp(r"^[A-Za-z0-9_.-]+$", message="ユーザー名には英数字と _ . - のみ使用できます。"),
+        ],
+    )
     email = StringField("email", validators=[DataRequired(), Email(), Length(max=255)])
     password = PasswordField("password", validators=[DataRequired(), Length(min=8)])
 
 class LoginForm(FlaskForm):
-    username = StringField("username", validators=[DataRequired(), Length(min=3, max=80)])
+    username = StringField(
+        "username",
+        validators=[
+            DataRequired(),
+            Length(min=3, max=80),
+            Regexp(r"^[A-Za-z0-9_.-]+$", message="ユーザー名には英数字と _ . - のみ使用できます。"),
+        ],
+    )
     password = PasswordField("password", validators=[DataRequired()])
 
 class EventForm(FlaskForm):
@@ -43,7 +58,14 @@ class OrganizationForm(FlaskForm):
 
 
 class InviteMemberForm(FlaskForm):
-    username = StringField("username", validators=[DataRequired(), Length(min=3, max=80)])
+    username = StringField(
+        "username",
+        validators=[
+            DataRequired(),
+            Length(min=3, max=80),
+            Regexp(r"^[A-Za-z0-9_.-@]+$", message="ユーザー名/メールには英数字と @ _ . - のみ使用できます。"),
+        ],
+    )
 
 
 class TaskForm(FlaskForm):
