@@ -562,3 +562,47 @@ def delete_event(event_id: int):
         current_app.logger.exception("イベント削除中に DB エラー")
         flash("イベントの削除に失敗しました。", "error")
     return redirect(url_for("events.calendar"))
+
+
+@events_bp.route('/events/<int:event_id>/repropose', methods=['POST'])
+@login_required
+def repropose_event(event_id: int):
+    """Minimal repropose: duplicate the event with start/end shifted by +7 days.
+
+    Permission: only the owner or organization admin can repropose.
+    """
+    event = Event.query.get_or_404(event_id)
+    current_user_obj = cast(UserModel, current_user._get_current_object())
+    allowed = False
+    if event.user_id == current_user_obj.id:
+        allowed = True
+    elif event.organization_id and current_user_obj in event.organization.members:
+        if user_is_org_admin(current_user_obj, event.organization):
+            allowed = True
+    if not allowed:
+        return jsonify({'error': 'permission denied'}), 403
+
+    try:
+        new_start = event.start_at + timedelta(days=7)
+        new_end = event.end_at + timedelta(days=7)
+        new = Event(
+            user_id=current_user_obj.id,
+            title=f"再提案: {event.title}",
+            description=event.description,
+            location=event.location,
+            participants=event.participants,
+            start_at=new_start,
+            end_at=new_end,
+            category=event.category,
+            rrule=event.rrule,
+            timezone=event.timezone,
+            color=event.color,
+            organization_id=event.organization_id,
+        )
+        db.session.add(new)
+        db.session.commit()
+        return jsonify({'id': new.id, 'start': new.start_at.isoformat(), 'end': new.end_at.isoformat()}), 201
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Failed to repropose event')
+        return jsonify({'error': 'failed'}), 500

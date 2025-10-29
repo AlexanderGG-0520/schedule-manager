@@ -4,6 +4,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from .. import db
 from ..models import User
 from ..forms import RegisterForm, LoginForm
+from ..forms import RegisterForm, LoginForm, ResetPasswordForm, ResendConfirmationForm
 from typing import cast
 import smtplib
 from email.message import EmailMessage
@@ -24,6 +25,56 @@ def set_language():
     if lang in ('ja', 'en'):
         session['lang'] = lang
     return redirect(request.referrer or url_for('events.calendar'))
+
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ResendConfirmationForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        user = User.query.filter_by(email=email).first()
+        if user:
+            token = user.generate_confirmation_token()
+            reset_url = url_for('auth.reset_password', token=token, _external=True)
+            subject = '[Schedule Manager] パスワード再設定'
+            text = f'以下のリンクからパスワードを再設定してください:\n\n{reset_url}\n\nこのリンクは1時間で無効になります。'
+            html = render_template('emails/reset_password.html', reset_url=reset_url, user=user)
+            try:
+                send_email(subject, str(user.email), text, html=html)
+                flash('パスワード再設定の案内を送信しました。受信トレイを確認してください。', 'success')
+            except Exception:
+                current_app.logger.exception('Failed to send password reset email')
+                flash('メール送信に失敗しました。管理者に連絡してください。', 'error')
+        else:
+            # Do not reveal whether email exists
+            flash('パスワード再設定の案内を送信しました。受信トレイを確認してください。', 'success')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/forgot_password.html', form=form)
+
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token: str):
+    email = User.confirm_token(token)
+    if not email:
+        flash('パスワード再設定リンクが無効または期限切れです。', 'error')
+        return redirect(url_for('auth.login'))
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash('ユーザーが見つかりません。', 'error')
+        return redirect(url_for('auth.login'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        pw = form.password.data
+        conf = form.confirm.data
+        if pw != conf:
+            flash('パスワードが一致しません。', 'error')
+            return render_template('auth/reset_password.html', form=form)
+        user.set_password(pw)
+        db.session.add(user)
+        db.session.commit()
+        flash('パスワードをリセットしました。ログインしてください。', 'success')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/reset_password.html', form=form)
 
 
 def send_email(subject: str, recipient: str, body: str, html: str | None = None) -> bool:

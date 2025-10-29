@@ -219,6 +219,46 @@ class Attachment(db.Model):
     uploader = db.relationship("User")
 
 
+class Reaction(db.Model):
+    __tablename__ = "reactions"
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    emoji = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    event = db.relationship("Event", backref="reactions")
+    user = db.relationship("User")
+
+
+class Retro(db.Model):
+    __tablename__ = 'retros'
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    q1 = db.Column(db.Text, nullable=True)
+    q2 = db.Column(db.Text, nullable=True)
+    q3 = db.Column(db.Text, nullable=True)
+    next_action = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    event = db.relationship('Event', backref='retros')
+    user = db.relationship('User')
+
+
+class Task(db.Model):
+    __tablename__ = 'tasks'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    title = db.Column(db.String(255), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True, index=True)
+    completed = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship('User')
+    event = db.relationship('Event')
+
+
 # External integrations bookkeeping
 class ExternalAccount(db.Model):
     __tablename__ = "external_accounts"

@@ -42,8 +42,19 @@
     {% endwith %}
   </section>
   <main id="app">
-    {% block content %}{% endblock %}
+    <div class="page-with-sidebar">
+      <div class="page-content">
+        {% block content %}{% endblock %}
+      </div>
+      <aside class="page-sidebar">
+        {% block sidebar %}
+          {% include 'calendar_partial.html' %}
+        {% endblock %}
+      </aside>
+    </div>
   </main>
   <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/reactions.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/retro.js') }}"></script>
 </body>
 </html>

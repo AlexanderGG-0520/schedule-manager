@@ -33,6 +33,11 @@ class ResendConfirmationForm(FlaskForm):
     email = StringField("email", validators=[DataRequired(), Email(), Length(max=255)])
 
 
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField("password", validators=[DataRequired(), Length(min=8)])
+    confirm = PasswordField("confirm", validators=[DataRequired(), Length(min=8)])
+
+
 class OrganizationForm(FlaskForm):
     name = StringField("name", validators=[DataRequired(), Length(min=2, max=128)])
 

@@ -1,0 +1,26 @@
+<div class="retro-widget" data-event-id="{{ event.id }}">
+  <h4>振り返り</h4>
+  <form class="retro-form">
+    <div class="grid-two">
+      <label>1) 何がうまくいったか
+        <textarea name="q1" rows="3" placeholder="良かった点"></textarea>
+      </label>
+      <label>2) 改善できること
+        <textarea name="q2" rows="3" placeholder="改善点"></textarea>
+      </label>
+    </div>
+    <label>3) 学び・気づき
+      <textarea name="q3" rows="2" placeholder="学びや気づき"></textarea>
+    </label>
+    <label>次にやること（任意・タスク化されます）
+      <input type="text" name="next_action" placeholder="次にやること（タスク化されます）" />
+    </label>
+    <div class="retro-actions">
+      <button type="button" class="retro-submit">送信</button>
+      <button type="button" class="retro-view">過去の振り返りを見る</button>
+    </div>
+    <div class="retro-feedback" aria-live="polite"></div>
+  </form>
+  <div class="retro-summary" style="margin-top:8px"></div>
+  <div class="retro-list" style="display:none"></div>
+</div>

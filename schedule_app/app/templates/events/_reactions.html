@@ -1,0 +1,14 @@
+<div class="reactions-widget">
+</div>
+<div class="reactions-controls-row">
+  <div class="reactions-container" data-event-id="{{ event.id }}" data-emoji-list="👍,❤️,👏,😄,🎉"></div>
+  <div class="reaction-picker-trigger">
+    <button type="button" class="icon-btn open-emoji-picker" aria-label="絵文字を選ぶ">😊</button>
+  </div>
+  <div class="reactions-ctrls">
+    {% if current_user.is_authenticated and (current_user.id == event.user_id or (event.organization_id and current_user in event.organization.members)) %}
+      <button type="button" class="repropose-btn" data-event-id="{{ event.id }}">再提案</button>
+    {% endif %}
+  </div>
+</div>
+</div>

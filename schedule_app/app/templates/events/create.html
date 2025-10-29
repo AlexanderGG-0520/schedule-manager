@@ -1,10 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="event-form">
-  <h2>イベント作成</h2>
-  <form method="post" novalidate>
-    {{ form.hidden_tag() }}
-
+<h2>イベント作成</h2>
+<form method="post">
+  {{ form.hidden_tag() }}
+  ...
+</form>
+{# include reactions and retro partials on event pages if event exists (template placeholder) #}
+{% if event is defined %}
+  {% include 'events/_reactions.html' %}
+  {% include 'events/_retro.html' %}
+{% endif %}
     <div class="form-row">
       <label for="{{ form.title.id }}">タイトル</label>
       {{ form.title(class="input", size=60) }}

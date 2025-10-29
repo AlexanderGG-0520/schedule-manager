@@ -68,6 +68,15 @@ async function renderCalendar() {
     end = endOfDay(now);
   }
 
+  // update current month label if present
+  try {
+    const currentMonthEl = document.getElementById('current-month');
+    if (currentMonthEl) {
+      const opts = { year: 'numeric', month: 'long' };
+      currentMonthEl.textContent = now.toLocaleDateString(undefined, opts);
+    }
+  } catch (e) { /* ignore if locale unavailable */ }
+
   const events = await fetchEvents(iso(start), iso(end), search);
 
   // simple render: clear and list events
