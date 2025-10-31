@@ -101,10 +101,15 @@ hr { border:0; border-top:1px solid #ddd; margin:12px 0; }
 .member-list { list-style:none; padding:0; margin:8px 0 16px 0; border:1px solid #eee; border-radius:6px; background:#fafafa; }
 .member-item { padding:10px 12px; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center; }
 .member-item:last-child { border-bottom:0; }
-.member-meta { font-size:14px; color:#333; }
+.member-meta { font-size:14px; color:#333; overflow-wrap:anywhere; word-break:break-word; max-width:70%; }
+.member-item { min-width:0; }
 .invite-form { display:flex; gap:8px; align-items:center; margin-top:8px; }
 .invite-form .input { flex:1; }
 .small-btn { padding:6px 8px; border-radius:6px; }
+
+/* Prevent long tokens or emails from overflowing layout */
+.member-item .btn { flex: 0 0 auto; }
+
 
 /* Calendar control improvements */
 .calendar-controls { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid #f0f0f0; width:100%; box-sizing:border-box; max-width:100%; }

@@ -438,3 +438,75 @@ def user_profile(user_id: int):
     user = User.query.get_or_404(user_id)
     # For now show username and email; this can be extended later
     return render_template('auth/profile.html', user=user)
+
+
+# Simple helper to assert admin role
+def _user_is_admin(user) -> bool:
+    try:
+        # If roles are set up, check for a role named 'admin'
+        for r in getattr(user, 'roles', []) or []:
+            if getattr(r, 'name', '').lower() == 'admin':
+                return True
+    except Exception:
+        pass
+    # fallback: check app config for an admin user id
+    try:
+        aid = current_app.config.get('ADMIN_USER_ID')
+        if aid and int(aid) == int(getattr(user, 'id', 0)):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+@auth_bp.route('/admin/reset-username', methods=['GET', 'POST'])
+@login_required
+def admin_reset_username():
+    """Admin-only page to change another user's username.
+
+    This writes an IntegrationLog entry describing the change.
+    """
+    if not _user_is_admin(current_user):
+        flash('管理者権限が必要です。', 'error')
+        return redirect(url_for('events.index'))
+
+    form = ResetUsernameForm()
+    # list users for convenience
+    users = User.query.order_by(User.id.asc()).limit(200).all()
+    if form.validate_on_submit():
+        # Expect a hidden user_id field in the form
+        target_id = request.form.get('user_id')
+        if not target_id:
+            flash('対象ユーザーが指定されていません。', 'error')
+            return render_template('auth/admin_reset_username.html', form=form, users=users)
+        target = User.query.get(int(target_id))
+        if not target:
+            flash('対象ユーザーが存在しません。', 'error')
+            return render_template('auth/admin_reset_username.html', form=form, users=users)
+        new = form.new_username.data
+        # uniqueness
+        existing = User.query.filter_by(username=new).first()
+        if existing:
+            flash('そのユーザー名は既に使用されています。別の名前を選んでください。', 'warning')
+            return render_template('auth/admin_reset_username.html', form=form, users=users)
+        old = target.username
+        try:
+            target.username = new
+            db.session.add(target)
+            # write audit to IntegrationLog
+            msg = f'admin {current_user.id} changed username of user {target.id} from "{old}" to "{new}"'
+            log = None
+            try:
+                from ..models import IntegrationLog
+                log = IntegrationLog(provider='admin', account_id=None, level='info', message=msg, created_at=db.func.now())
+                db.session.add(log)
+            except Exception:
+                current_app.logger.info('Could not write IntegrationLog for username reset')
+            db.session.commit()
+            flash('ユーザー名を変更しました。', 'success')
+            return redirect(url_for('auth.admin_reset_username'))
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('管理者によるユーザー名変更中にエラー')
+            flash('ユーザー名の更新に失敗しました。', 'error')
+    return render_template('auth/admin_reset_username.html', form=form, users=users)

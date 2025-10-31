@@ -11,7 +11,7 @@
       <div>
         {% if m != current_user %}
         <form method="post" action="{{ url_for('organizations.remove_member', org_id=org.id, user_id=m.id) }}" style="display:inline" class="remove-member-form" data-member-id="{{ m.id }}">
-          {{ csrf_token() }}
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="button" class="btn small-btn btn-remove" data-bs-toggle="modal" data-bs-target="#removeConfirmModal" data-member-id="{{ m.id }}">削除</button>
         </form>
         {% else %}

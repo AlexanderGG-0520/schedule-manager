@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="event-form">
+  <h2>管理者: ユーザー名リセット</h2>
+  <p>対象ユーザーと新しいユーザー名を選択して実行してください。操作は監査ログに記録されます。</p>
+  <form method="post" class="auth-form">
+    {{ form.hidden_tag() }}
+    <div class="form-row">
+      <label for="user_id">対象ユーザー</label>
+      <select name="user_id" id="user_id" class="input">
+        {% for u in users %}
+        <option value="{{ u.id }}">{{ u.id }} - {{ u.username }} ({{ u.email }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="new_username">新しいユーザー名</label>
+      {{ form.new_username(class='input') }}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn primary">変更を実行</button>
+      <a class="btn" href="{{ url_for('events.index') }}">キャンセル</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
