@@ -1,0 +1,9 @@
+{{ inviter_name or '招待者' }} から {{ org.name }} への招待が届いています.
+
+招待リンク: {{ accept_url }}
+
+サービスの説明: {{ landing_url }}
+
+このリンクは1時間で無効になります。
+
+Schedule Manager

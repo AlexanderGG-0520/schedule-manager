@@ -100,14 +100,27 @@ def invite_member(org_id: int):
                 # landing_url: link to app root where users can learn more (better UX)
                 landing_url = url_for("events.index", _external=True)
                 subject = f"{org.name} への招待"
-                body = (
-                    f"{org.name} への参加招待を受け取りました。\n\n"
-                    f"この招待は下のリンクから受け取れます（ログインしていない場合は招待ランディングページが表示されます）。:\n\n"
-                    f"招待リンク: {accept_url}\n\n"
-                    f"招待について詳しくは: {landing_url}\n\n"
-                    f"この招待リンクは1時間で無効になります。"
+                # render both text and html versions using templates
+                try:
+                    html_body = render_template(
+                        "emails/org_invite.html",
+                        org=org,
+                        accept_url=accept_url,
+                        landing_url=landing_url,
+                        inviter_name=current_user.username,
+                        inviter_full_name=getattr(current_user, 'full_name', None),
+                        inviter_avatar=getattr(current_user, 'avatar_url', None),
+                    )
+                except Exception:
+                    html_body = None
+                text_body = render_template(
+                    "emails/org_invite.txt",
+                    org=org,
+                    accept_url=accept_url,
+                    landing_url=landing_url,
+                    inviter_name=current_user.username,
                 )
-                send_email(subject, str(email), body)
+                send_email(subject, str(email), text_body, html=html_body)
                 flash("招待メールを送信しました。受信トレイを確認してください。", "success")
             except SQLAlchemyError:
                 db.session.rollback()
@@ -196,12 +209,16 @@ def accept_invite(token: str):
             inviter = None
         inviter_name = inviter.username if inviter else None
         inviter_email = inviter.email if inviter else None
+        inviter_full_name = inviter.full_name if inviter else None
+        inviter_avatar = inviter.avatar_url if inviter else None
         return render_template(
             "organizations/accept_landing.html",
             org=org,
             inviter_username=inviter_name,
             inviter_email=inviter_email,
             inviter_id=inv.invited_by,
+            inviter_full_name=inviter_full_name,
+            inviter_avatar=inviter_avatar,
         )
     user_obj = cast(UserModel, current_user._get_current_object())
     # create membership if not exists

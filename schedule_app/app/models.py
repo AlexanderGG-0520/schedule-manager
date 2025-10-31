@@ -13,6 +13,9 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    # optional display name and avatar for improved public profiles
+    full_name = db.Column(db.String(255), nullable=True)
+    avatar_url = db.Column(db.String(1024), nullable=True)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     confirmed = db.Column(db.Boolean, default=False, nullable=False)
