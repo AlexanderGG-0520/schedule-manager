@@ -11,8 +11,8 @@ from schedule_app.app.jobs import job
 
 @job(schedule="interval", minutes=15, id="cleanup_old_events")
 def cleanup_old_events():
-	# cleanup code here
-	pass
+# cleanup code here
+pass
 ```
 
 Supported interval kwargs: `weeks`, `days`, `hours`, `minutes`, `seconds`.
