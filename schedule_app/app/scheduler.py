@@ -62,21 +62,43 @@ def register_jobs(scheduler: BackgroundScheduler, app: Flask):
                 pass
             return _wrapped
 
-        # Example job registration
-        try:
-            cleanup_old_events = getattr(jobs_module, "cleanup_old_events")
-            scheduler.add_job(_wrap(cleanup_old_events), "interval", minutes=15, id="cleanup_old_events", replace_existing=True)
-            logger.info("Registered job cleanup_old_events (wrapped in app context)")
-        except AttributeError:
-            logger.info("No cleanup_old_events job available")
-
-        # register external account refresh job if available
-        try:
-            refresh_external_accounts = getattr(jobs_module, "refresh_external_accounts")
-            scheduler.add_job(_wrap(refresh_external_accounts), "interval", minutes=10, id="refresh_external_accounts", replace_existing=True)
-            logger.info("Registered job refresh_external_accounts (wrapped in app context)")
-        except AttributeError:
-            logger.info("No refresh_external_accounts job available")
+        # Auto-discover functions in the jobs module that are annotated with
+        # the @job(...) decorator (they will have a .job_meta attribute).
+        registered = 0
+        for name in dir(jobs_module):
+            try:
+                fn = getattr(jobs_module, name)
+            except Exception:
+                continue
+            if not callable(fn):
+                continue
+            meta = getattr(fn, "job_meta", None)
+            if not meta:
+                continue
+            schedule_type = meta.get("schedule", "interval")
+            job_id = meta.get("id", name)
+            try:
+                wrapped = _wrap(fn)
+                kwargs = {"id": job_id, "replace_existing": True}
+                if schedule_type == "interval":
+                    interval_kwargs = {}
+                    # copy supported interval args if provided
+                    for k in ("weeks", "days", "hours", "minutes", "seconds"):
+                        if k in meta:
+                            interval_kwargs[k] = meta[k]
+                    if not interval_kwargs:
+                        # sensible default if none provided
+                        interval_kwargs["minutes"] = 15
+                    scheduler.add_job(wrapped, "interval", **interval_kwargs, **kwargs)
+                else:
+                    logger.info("Unsupported schedule type %s for job %s", schedule_type, name)
+                    continue
+                registered += 1
+                logger.info("Registered job %s (wrapped) schedule=%s meta=%s", job_id, schedule_type, meta)
+            except Exception:
+                logger.exception("Failed to register job %s", name)
+        if registered == 0:
+            logger.info("No decorated jobs found in jobs module to register")
     except Exception as e:
         logger.exception("Failed to register jobs: %s", e)
 

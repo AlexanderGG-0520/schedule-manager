@@ -46,6 +46,24 @@ def _process_notification(n: Notification) -> None:
         current_app.logger.exception("Failed to process Notification %s", getattr(n, "id", None))
 
 
+# Job decorator for scheduler auto-discovery
+def job(**meta):
+    """Decorator to mark a function as a scheduled job.
+
+    Example:
+        @job(schedule='interval', minutes=15, id='cleanup_old_events')
+        def cleanup_old_events():
+            ...
+    Supported meta keys: schedule (e.g. 'interval'), id, minutes, seconds, hours
+    """
+
+    def _decorator(fn):
+        setattr(fn, "job_meta", meta)
+        return fn
+
+    return _decorator
+
+
 def run_due_jobs():
     """Process due notifications and run maintenance jobs.
 
@@ -64,6 +82,7 @@ def run_due_jobs():
         _process_notification(n)
 
 
+@job(schedule="interval", minutes=15, id="cleanup_old_events")
 def cleanup_old_events():
     """Trivial cleanup job: remove events that are completely in the distant past.
 
@@ -83,6 +102,7 @@ def cleanup_old_events():
         current_app.logger.info("cleanup_old_events: nothing to delete")
 
 
+@job(schedule="interval", minutes=10, id="refresh_external_accounts")
 def refresh_external_accounts():
     """Refresh access tokens for external accounts whose tokens are expired or about to expire.
 
