@@ -45,20 +45,38 @@ def register_jobs(scheduler: BackgroundScheduler, app: Flask):
     """
     # Import jobs lazily so the app context and DB models are available
     try:
-        with app.app_context():
-            # Example job registration; if you have a jobs module, import it here
-            from .jobs import cleanup_old_events  # type: ignore
+        # Import jobs (no app_context required for import). When APScheduler executes
+        # the job functions they run in worker threads without a Flask application
+        # context — wrap them so each execution runs inside `app.app_context()`.
+        from . import jobs as jobs_module  # type: ignore
 
-            scheduler.add_job(cleanup_old_events, "interval", minutes=15, id="cleanup_old_events", replace_existing=True)
-            logger.info("Registered job cleanup_old_events")
-            # register external account refresh job if available
+        def _wrap(fn):
+            # preserve function identity where possible
+            def _wrapped(*a, **kw):
+                with app.app_context():
+                    return fn(*a, **kw)
+
             try:
-                from .jobs import refresh_external_accounts  # type: ignore
-
-                scheduler.add_job(refresh_external_accounts, "interval", minutes=10, id="refresh_external_accounts", replace_existing=True)
-                logger.info("Registered job refresh_external_accounts")
+                _wrapped.__name__ = fn.__name__
             except Exception:
-                logger.info("No refresh_external_accounts job available")
+                pass
+            return _wrapped
+
+        # Example job registration
+        try:
+            cleanup_old_events = getattr(jobs_module, "cleanup_old_events")
+            scheduler.add_job(_wrap(cleanup_old_events), "interval", minutes=15, id="cleanup_old_events", replace_existing=True)
+            logger.info("Registered job cleanup_old_events (wrapped in app context)")
+        except AttributeError:
+            logger.info("No cleanup_old_events job available")
+
+        # register external account refresh job if available
+        try:
+            refresh_external_accounts = getattr(jobs_module, "refresh_external_accounts")
+            scheduler.add_job(_wrap(refresh_external_accounts), "interval", minutes=10, id="refresh_external_accounts", replace_existing=True)
+            logger.info("Registered job refresh_external_accounts (wrapped in app context)")
+        except AttributeError:
+            logger.info("No refresh_external_accounts job available")
     except Exception as e:
         logger.exception("Failed to register jobs: %s", e)
 
