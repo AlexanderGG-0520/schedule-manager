@@ -11,10 +11,17 @@ class Config:
         raise RuntimeError("DATABASE_URL environment variable is required (no sqlite fallback)")
     SQLALCHEMY_TRACK_MODIFICATIONS: Final[bool] = False
     SESSION_COOKIE_HTTPONLY: Final[bool] = True
-    SESSION_COOKIE_SECURE: Final[bool] = os.getenv("FLASK_ENV") == "production"
+    # Respect FLASK_DEBUG (preferred) and fall back to FLASK_ENV for older deployments.
+    # FLASK_ENV is deprecated in Flask 2.3; use FLASK_DEBUG (1/true/yes => debug mode).
+    _flask_debug = os.getenv("FLASK_DEBUG")
+    if _flask_debug is not None:
+        _is_production = not (_flask_debug.lower() in ("1", "true", "yes"))
+    else:
+        _is_production = os.getenv("FLASK_ENV") == "production"
+    SESSION_COOKIE_SECURE: Final[bool] = _is_production
     SESSION_COOKIE_SAMESITE: Final[str] = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
     REMEMBER_COOKIE_HTTPONLY: Final[bool] = True
-    REMEMBER_COOKIE_SECURE: Final[bool] = os.getenv("FLASK_ENV") == "production"
+    REMEMBER_COOKIE_SECURE: Final[bool] = _is_production
     # Mail settings (for confirmation emails)
     MAIL_SERVER: Final[str] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT: Final[int] = int(os.getenv("MAIL_PORT", "587"))
