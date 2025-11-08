@@ -34,6 +34,29 @@ def get_scheduler(app: Flask) -> BackgroundScheduler:
     return sched
 
 
+def run_job_in_app_context(module_name: str, func_name: str, *a, **kw):
+    """Import and run a function inside a fresh Flask app context.
+
+    This function is importable by textual reference (module:function) so it can be
+    stored by APScheduler as a string reference. The dispatcher will import the
+    target function by module/name and execute it inside a newly created
+    application context (calls `create_app()` each time).
+    """
+    try:
+        # Create an app for the scheduler execution context
+        app = create_app()
+        # Import the target module and fetch the callable
+        import importlib
+
+        mod = importlib.import_module(module_name)
+        fn = getattr(mod, func_name)
+        with app.app_context():
+            return fn(*a, **kw)
+    except Exception:
+        logger.exception("Failed to run job %s.%s in app context", module_name, func_name)
+        raise
+
+
 def register_jobs(scheduler: BackgroundScheduler, app: Flask):
     """Import and register jobs here.
 
@@ -50,17 +73,11 @@ def register_jobs(scheduler: BackgroundScheduler, app: Flask):
         # context — wrap them so each execution runs inside `app.app_context()`.
         from . import jobs as jobs_module  # type: ignore
 
-        def _wrap(fn):
-            # preserve function identity where possible
-            def _wrapped(*a, **kw):
-                with app.app_context():
-                    return fn(*a, **kw)
-
-            try:
-                _wrapped.__name__ = fn.__name__
-            except Exception:
-                pass
-            return _wrapped
+        # We avoid scheduling local/wrapped callables (which APScheduler cannot
+        # serialize to a textual reference). Instead we schedule a top-level
+        # dispatcher `run_job_in_app_context` (defined in this module) and pass
+        # the target function's module and name as args. APScheduler will store
+        # the dispatcher as a textual reference which is importable on restart.
 
         # Auto-discover functions in the jobs module that are annotated with
         # the @job(...) decorator (they will have a .job_meta attribute).
@@ -78,7 +95,8 @@ def register_jobs(scheduler: BackgroundScheduler, app: Flask):
             schedule_type = meta.get("schedule", "interval")
             job_id = meta.get("id", name)
             try:
-                wrapped = _wrap(fn)
+                # textual reference to the dispatcher in this module
+                dispatcher_ref = f"{__name__}:run_job_in_app_context"
                 kwargs = {"id": job_id, "replace_existing": True}
                 if schedule_type == "interval":
                     interval_kwargs = {}
@@ -89,12 +107,20 @@ def register_jobs(scheduler: BackgroundScheduler, app: Flask):
                     if not interval_kwargs:
                         # sensible default if none provided
                         interval_kwargs["minutes"] = 15
-                    scheduler.add_job(wrapped, "interval", **interval_kwargs, **kwargs)
+                    # Pass the target function's module and name as the first
+                    # two positional args to the dispatcher.
+                    scheduler.add_job(
+                        dispatcher_ref,
+                        "interval",
+                        args=[fn.__module__, fn.__name__],
+                        **interval_kwargs,
+                        **kwargs,
+                    )
                 else:
                     logger.info("Unsupported schedule type %s for job %s", schedule_type, name)
                     continue
                 registered += 1
-                logger.info("Registered job %s (wrapped) schedule=%s meta=%s", job_id, schedule_type, meta)
+                logger.info("Registered job %s (via dispatcher) schedule=%s meta=%s", job_id, schedule_type, meta)
             except Exception:
                 logger.exception("Failed to register job %s", name)
         if registered == 0:
