@@ -68,6 +68,14 @@ def register_jobs(scheduler: BackgroundScheduler, app: Flask):
     """
     # Import jobs lazily so the app context and DB models are available
     try:
+        # Remove any previously persisted jobs to avoid executing stale
+        # callables that were stored with non-importable references.
+        try:
+            scheduler.remove_all_jobs()
+            logger.info("Cleared existing jobs from jobstore before (re)registering")
+        except Exception:
+            logger.exception("Failed to clear existing jobs from jobstore; continuing to register")
+
         # Import jobs (no app_context required for import). When APScheduler executes
         # the job functions they run in worker threads without a Flask application
         # context — wrap them so each execution runs inside `app.app_context()`.
