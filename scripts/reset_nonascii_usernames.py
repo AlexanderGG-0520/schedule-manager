@@ -22,6 +22,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 from typing import Iterable
 
 
@@ -45,10 +46,27 @@ def find_nonascii_users(all_users: Iterable) -> list:
     bad = []
     allowed_re = re.compile(r"^[A-Za-z0-9_.-]+$")
     for u in all_users:
-        if not isinstance(u.username, str) or not u.username:
+        name = u.username or ""
+        if not isinstance(name, str) or not name:
             bad.append(u)
             continue
-        if not u.username.isascii() or not allowed_re.match(u.username):
+        # Normalize to NFKC to handle full-width ascii variants, then test
+        norm = unicodedata.normalize("NFKC", name)
+        # If it contains CJK/Japanese characters, flag it
+        def _contains_cjk(s: str) -> bool:
+            for ch in s:
+                cp = ord(ch)
+                # CJK Unified Ideographs, Hiragana, Katakana, Fullwidth forms
+                if (0x4E00 <= cp <= 0x9FFF) or (0x3040 <= cp <= 0x309F) or (0x30A0 <= cp <= 0x30FF) or (0xFF00 <= cp <= 0xFFEF):
+                    return True
+            return False
+
+        if _contains_cjk(norm):
+            bad.append(u)
+            continue
+
+        # If normalization does not match allowed ASCII pattern, flag it
+        if not allowed_re.match(norm):
             bad.append(u)
     return bad
 
