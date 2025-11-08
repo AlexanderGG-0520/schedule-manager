@@ -154,7 +154,12 @@ def main(argv=None):
                 # prepare SQL backup line
                 safe_old = (old or "")
                 safe_new = new
-                backup_lines.append(f"UPDATE users SET username = '{safe_new.replace("'","''")}' WHERE id = {uid} AND username = '{safe_old.replace("'","''")}' ;\n")
+                # escape single quotes for SQL literal
+                safe_old_escaped = safe_old.replace("'", "''")
+                safe_new_escaped = safe_new.replace("'", "''")
+                backup_lines.append(
+                    f"UPDATE users SET username = '{safe_new_escaped}' WHERE id = {uid} AND username = '{safe_old_escaped}' ;\n"
+                )
                 # apply
                 u.username = new
                 db.session.add(u)
