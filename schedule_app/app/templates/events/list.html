@@ -9,6 +9,7 @@
     {% if e.organization %} [組織: {{ e.organization.name }}] {% endif %}
     - <a href="{{ url_for('events.edit_event', event_id=e.id) }}">編集</a>
     <form action="{{ url_for('events.delete_event', event_id=e.id) }}" method="post" style="display:inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <button type="submit">削除</button>
     </form>
   </li>

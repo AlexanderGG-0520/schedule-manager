@@ -67,8 +67,8 @@ def list_events():
     else:
         # personal events
         events = Event.query.filter_by(user_id=current_user.id, organization_id=None).order_by(Event.start_at).all()
-    # render the calendar UI for event lists (calendar will call /api/v1/events)
-    return render_template("calendar.html")
+    # render the event list template
+    return render_template("events/list.html", events=events)
 
 
 
@@ -251,14 +251,34 @@ def create_event():
             if not org or current_user_obj not in org.members:
                 flash("組織に対する権限がありません。", "error")
                 return render_template("events/create.html", form=form)
+        
+        # Convert datetime from user's selected timezone to UTC
+        user_tz = dateutil_tz.gettz(form.timezone.data)
+        if user_tz is None:
+            user_tz = dateutil_tz.UTC
+        
+        # DateTimeLocalField returns naive datetime; interpret it in user's timezone
+        start_naive = form.start_at.data
+        end_naive = form.end_at.data
+        
+        # Add timezone info and convert to UTC
+        if start_naive and end_naive:
+            start_aware = start_naive.replace(tzinfo=user_tz)
+            end_aware = end_naive.replace(tzinfo=user_tz)
+            start_utc = start_aware.astimezone(dateutil_tz.UTC).replace(tzinfo=None)
+            end_utc = end_aware.astimezone(dateutil_tz.UTC).replace(tzinfo=None)
+        else:
+            flash("開始日時と終了日時を入力してください。", "error")
+            return render_template("events/create.html", form=form)
+        
         event = Event(
             user_id=current_user.id,
             title=form.title.data,
             description=form.description.data,
             location=form.location.data,
             participants=form.participants.data,
-            start_at=form.start_at.data,
-            end_at=form.end_at.data,
+            start_at=start_utc,
+            end_at=end_utc,
             category=form.category.data,
             rrule=form.rrule.data,
             timezone=form.timezone.data,
@@ -501,6 +521,22 @@ def edit_event(event_id: int):
     form.organization_id.choices = cast(Any, choices)
     form.organization_id.data = event.organization_id or -1
 
+    # Convert stored UTC times to user's timezone for display
+    if request.method == "GET":
+        event_tz = dateutil_tz.gettz(event.timezone or 'Asia/Tokyo')
+        if event_tz is None:
+            event_tz = dateutil_tz.UTC
+        
+        # Convert UTC naive datetime to timezone-aware and then to user's timezone
+        start_utc = event.start_at.replace(tzinfo=dateutil_tz.UTC)
+        end_utc = event.end_at.replace(tzinfo=dateutil_tz.UTC)
+        start_local = start_utc.astimezone(event_tz).replace(tzinfo=None)
+        end_local = end_utc.astimezone(event_tz).replace(tzinfo=None)
+        
+        form.start_at.data = start_local
+        form.end_at.data = end_local
+        form.timezone.data = event.timezone or 'Asia/Tokyo'
+
     if form.validate_on_submit():
         org_id_raw = form.organization_id.data
         try:
@@ -514,12 +550,31 @@ def edit_event(event_id: int):
             if not org or current_user_obj not in org.members:
                 flash("組織に対する権限がありません。", "error")
                 return render_template("events/edit.html", form=form, event=event)
+        
+        # Convert datetime from user's selected timezone to UTC
+        user_tz = dateutil_tz.gettz(form.timezone.data)
+        if user_tz is None:
+            user_tz = dateutil_tz.UTC
+        
+        start_naive = form.start_at.data
+        end_naive = form.end_at.data
+        
+        if start_naive and end_naive:
+            start_aware = start_naive.replace(tzinfo=user_tz)
+            end_aware = end_naive.replace(tzinfo=user_tz)
+            start_utc = start_aware.astimezone(dateutil_tz.UTC).replace(tzinfo=None)
+            end_utc = end_aware.astimezone(dateutil_tz.UTC).replace(tzinfo=None)
+        else:
+            # Fallback to original values if form data is invalid
+            start_utc = event.start_at
+            end_utc = event.end_at
+        
         event.title = form.title.data
         event.description = form.description.data
         event.location = form.location.data
         event.participants = form.participants.data
-        event.start_at = form.start_at.data
-        event.end_at = form.end_at.data
+        event.start_at = start_utc
+        event.end_at = end_utc
         event.category = form.category.data
         event.rrule = form.rrule.data
         event.timezone = form.timezone.data

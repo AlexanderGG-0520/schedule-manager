@@ -29,17 +29,33 @@ class LoginForm(FlaskForm):
     )
     password = PasswordField("password", validators=[DataRequired()])
 
+# Common timezone choices for the EventForm
+COMMON_TIMEZONES = [
+    ('UTC', 'UTC'),
+    ('Asia/Tokyo', 'Asia/Tokyo (日本)'),
+    ('America/New_York', 'America/New_York (東部)'),
+    ('America/Los_Angeles', 'America/Los_Angeles (太平洋)'),
+    ('America/Chicago', 'America/Chicago (中部)'),
+    ('Europe/London', 'Europe/London (英国)'),
+    ('Europe/Paris', 'Europe/Paris (中欧)'),
+    ('Australia/Sydney', 'Australia/Sydney (豪州)'),
+    ('Asia/Shanghai', 'Asia/Shanghai (中国)'),
+    ('Asia/Hong_Kong', 'Asia/Hong_Kong (香港)'),
+    ('Asia/Singapore', 'Asia/Singapore (シンガポール)'),
+    ('Asia/Seoul', 'Asia/Seoul (韓国)'),
+]
+
 class EventForm(FlaskForm):
     title = StringField("title", validators=[DataRequired(), Length(max=200)])
     description = TextAreaField("description", validators=[Optional(), Length(max=2000)])
-    # DateTimeLocalField は input type="datetime-local" 用。保存時はUTCに変換すること。
+    # DateTimeLocalField は input type="datetime-local" 用。ユーザーの選択したタイムゾーンで解釈してUTCに変換する
     start_at = DateTimeLocalField("start_at", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
     end_at = DateTimeLocalField("end_at", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
     location = StringField("location", validators=[Optional(), Length(max=255)])
     participants = StringField("participants", validators=[Optional(), Length(max=2000)])
     category = StringField("category", validators=[Optional(), Length(max=64)])
     rrule = StringField("rrule", validators=[Optional(), Length(max=512)])
-    timezone = StringField("timezone", validators=[Optional(), Length(max=64)])
+    timezone = SelectField("timezone", choices=COMMON_TIMEZONES, validators=[DataRequired()], default='Asia/Tokyo')
     color = StringField("color", validators=[DataRequired(), Length(min=4, max=7)])
     organization_id = SelectField("organization_id", choices=[], coerce=int, validators=[Optional()])
 
