@@ -44,7 +44,8 @@ def list_events():
             end_dt = parse_iso8601(end)
         except ValueError:
             abort(400, "start/end の形式が不正です")
-        q = q.filter(Event.start_at >= start_dt, Event.end_at <= end_dt)
+        # Filter events that overlap with the date range
+        q = q.filter(Event.start_at < end_dt, Event.end_at > start_dt)
     if query:
         q = q.filter(Event.title.ilike(f"%{query}%") | Event.description.ilike(f"%{query}%"))
     events = q.order_by(Event.start_at).all()
