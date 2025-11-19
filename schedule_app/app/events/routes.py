@@ -233,8 +233,8 @@ def create_event():
     # populate organization choices with memberships (use the real user object)
     current_user_obj = cast(UserModel, current_user._get_current_object())
     orgs = getattr(current_user_obj, "organizations", []) or []
-    # WTForms SelectField expects string values for option values; convert ids to str
-    choices = [(str(-1), "個人用")] + [(str(o.id), o.name) for o in orgs]
+    # WTForms SelectField with coerce=int expects integer values for option values
+    choices = [(-1, "個人用")] + [(o.id, o.name) for o in orgs]
     form.organization_id.choices = cast(Any, choices)
 
     if form.validate_on_submit():
@@ -497,7 +497,7 @@ def edit_event(event_id: int):
 
     form = EventForm(obj=event)
     orgs = getattr(current_user_obj, "organizations", []) or []
-    choices = [(str(-1), "個人用")] + [(str(o.id), o.name) for o in orgs]
+    choices = [(-1, "個人用")] + [(o.id, o.name) for o in orgs]
     form.organization_id.choices = cast(Any, choices)
     form.organization_id.data = event.organization_id or -1
 
