@@ -96,7 +96,7 @@ async function renderCalendar() {
   // group events by date (YYYY-MM-DD)
   const buckets = {};
   for (const e of events) {
-    const d = new Date(e.start);
+    const d = new Date(e.start_at);
     const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     if (!buckets[key]) buckets[key] = [];
     buckets[key].push(e);
@@ -138,7 +138,11 @@ async function renderCalendar() {
           const li = document.createElement('li');
           li.className = 'day-event';
           li.style.borderLeft = `4px solid ${e.color || '#4287f5'}`;
-          li.textContent = `${new Date(e.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ${e.title}`;
+          li.style.cursor = 'pointer';
+          li.textContent = `${new Date(e.start_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ${e.title}`;
+          li.addEventListener('click', function() {
+            window.location.href = `/events/${e.id}/edit`;
+          });
           list.appendChild(li);
         }
         cell.appendChild(list);
@@ -180,7 +184,11 @@ async function renderCalendar() {
         const li = document.createElement('li');
         li.className = 'day-event';
         li.style.borderLeft = `4px solid ${e.color || '#4287f5'}`;
-        li.textContent = `${new Date(e.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ${e.title}`;
+        li.style.cursor = 'pointer';
+        li.textContent = `${new Date(e.start_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ${e.title}`;
+        li.addEventListener('click', function() {
+          window.location.href = `/events/${e.id}/edit`;
+        });
         list.appendChild(li);
       }
       cell.appendChild(list);
@@ -219,7 +227,11 @@ function openEventsModal(year, month, date, evs) {
   for (const e of evs) {
     const li = document.createElement('li');
     li.className = 'modal-event';
-    li.innerHTML = `<strong>${new Date(e.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong> ${e.title}<div class="modal-event-meta">${e.location || ''}</div>`;
+    li.style.cursor = 'pointer';
+    li.innerHTML = `<strong>${new Date(e.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong> ${e.title}<div class="modal-event-meta">${e.location || ''}</div>`;
+    li.addEventListener('click', function() {
+      window.location.href = `/events/${e.id}/edit`;
+    });
     ul.appendChild(li);
   }
   content.appendChild(ul);
@@ -239,7 +251,11 @@ function closeEventsModal() {
     const li = document.createElement('li');
     li.className = 'day-event';
     li.style.borderLeft = `4px solid ${e.color || '#4287f5'}`;
-    li.textContent = `${new Date(e.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${new Date(e.end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ${e.title}`;
+    li.style.cursor = 'pointer';
+    li.textContent = `${new Date(e.start_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${new Date(e.end_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ${e.title}`;
+    li.addEventListener('click', function() {
+      window.location.href = `/events/${e.id}/edit`;
+    });
     list.appendChild(li);
   }
   root.appendChild(list);
