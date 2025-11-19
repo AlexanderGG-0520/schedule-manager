@@ -24,7 +24,20 @@ def list_events():
     end = request.args.get("end")
     query = request.args.get("query", "", type=str)
 
-    q = Event.query.filter(Event.user_id == current_user.id)
+    # Get both personal events and organization events
+    from ..models import Organization
+    user_orgs = Organization.query.join(Organization.members).filter_by(id=current_user.id).all()
+    org_ids = [org.id for org in user_orgs]
+    
+    # Personal events or events from user's organizations
+    if org_ids:
+        q = Event.query.filter(
+            (Event.user_id == current_user.id) | 
+            (Event.organization_id.in_(org_ids))
+        )
+    else:
+        q = Event.query.filter(Event.user_id == current_user.id)
+    
     if start and end:
         try:
             start_dt = parse_iso8601(start)

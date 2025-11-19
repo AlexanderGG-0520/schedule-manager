@@ -67,8 +67,13 @@
 
     <div class="form-row form-actions">
       <button type="submit" class="btn primary">更新</button>
-      <a href="{{ url_for('events.index') }}" class="btn">キャンセル</a>
+      <a href="{{ url_for('events.calendar') }}" class="btn">キャンセル</a>
     </div>
+  </form>
+  
+  <form method="post" action="{{ url_for('events.delete_event', event_id=event.id) }}" style="margin-top: 1rem;" onsubmit="return confirm('このイベントを削除しますか？');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <button type="submit" class="btn" style="background-color: #dc3545; color: white;">削除</button>
   </form>
 </div>
 {% endblock %}
