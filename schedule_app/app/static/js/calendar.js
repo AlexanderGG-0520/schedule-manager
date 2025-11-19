@@ -58,8 +58,11 @@ async function renderCalendar() {
 
   let start, end;
   if (view === "month") {
-    start = startOfMonth(now);
-    end = endOfMonth(now);
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+    // For month view, fetch events for the entire grid (including prev/next month days)
+    start = startOfWeek(monthStart);
+    end = endOfWeek(new Date(monthEnd.getTime() - 1)); // Last day of month
   } else if (view === "week") {
     start = startOfWeek(now);
     end = endOfWeek(now);
@@ -103,7 +106,9 @@ async function renderCalendar() {
   }
 
   if (view === 'month') {
-    // build month grid starting from start (first of month) to end (first of next month)
+    // build month grid - display range already calculated as start/end
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
     const grid = document.createElement('div');
     grid.className = 'calendar-grid month-grid';
     // header row (weekday names)
@@ -118,9 +123,11 @@ async function renderCalendar() {
     }
     grid.appendChild(header);
 
-    // compute first cell (startOfWeek of the first of month)
-    let cursor = startOfWeek(start);
-    while (cursor < end) {
+    // Grid starts from first Monday on or before month start
+    let cursor = startOfWeek(monthStart);
+    // Grid ends after last Sunday on or after month end
+    const gridEnd = endOfWeek(new Date(monthEnd.getTime() - 1));
+    while (cursor < gridEnd) {
       const row = document.createElement('div');
       row.className = 'calendar-row';
       for (let i=0;i<7;i++){
