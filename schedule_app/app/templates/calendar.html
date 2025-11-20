@@ -1,4 +1,9 @@
 {% extends "base.html" %}
+
+{% block sidebar %}
+  {# カレンダーページではサイドバーのカレンダーを非表示にする #}
+{% endblock %}
+
 {% block content %}
   {% include 'calendar_partial.html' %}
 {% endblock %}
