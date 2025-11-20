@@ -135,15 +135,12 @@ async function renderCalendar() {
     grid.appendChild(header);
 
     // Grid starts from first Monday on or before month start
-    let cursor = startOfWeek(monthStart);
-    // Grid ends after last Sunday on or after month end
-    const lastDayOfMonth = new Date(monthEnd);
-    lastDayOfMonth.setDate(lastDayOfMonth.getDate() - 1);
-    const gridEndDate = endOfWeek(lastDayOfMonth);
-    const gridEndDay = new Date(gridEndDate);
-    gridEndDay.setHours(0,0,0,0); // Compare just the date
+    let cursor = new Date(startOfWeek(monthStart));
+    cursor.setHours(0,0,0,0);
+    // Calculate how many weeks to show (typically 4-6 weeks)
+    const weeksToShow = 6; // Always show 6 weeks for consistency
     
-    while (cursor <= gridEndDay) {
+    for (let week = 0; week < weeksToShow; week++) {
       const row = document.createElement('div');
       row.className = 'calendar-row';
       for (let i=0;i<7;i++){
