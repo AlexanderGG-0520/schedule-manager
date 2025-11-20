@@ -25,15 +25,16 @@ function endOfMonth(date) {
 
 function startOfWeek(date) {
   const d = new Date(date);
+  d.setHours(0,0,0,0);
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day; // Monday-start (Sunday=0, Monday=1)
   d.setDate(d.getDate() + diff);
-  d.setHours(0,0,0,0);
   return d;
 }
 
 function endOfWeek(date) {
   const d = new Date(date);
+  d.setHours(0,0,0,0);
   const day = d.getDay();
   const diff = day === 0 ? 0 : 7 - day; // Days until Sunday (Sunday=0)
   d.setDate(d.getDate() + diff);
@@ -92,6 +93,7 @@ async function renderCalendar() {
   } catch (e) { /* ignore if locale unavailable */ }
 
   const events = await fetchEvents(iso(start), iso(end), search);
+  console.log('Date range:', iso(start), 'to', iso(end));
 
   // simple render: clear and list events
   root.innerHTML = "";
@@ -107,14 +109,18 @@ async function renderCalendar() {
     // continue and render an empty calendar grid so layout is visible
   }
 
-  // group events by date (YYYY-MM-DD)
+  // group events by date (YYYY-MM-DD) using local date
   const buckets = {};
   for (const e of events) {
+    // Parse the ISO string and convert to local date for bucketing
     const d = new Date(e.start_at);
+    // Use local date for key to match calendar cells
     const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    console.log('Event:', e.title, 'start_at:', e.start_at, 'parsed date:', d.toString(), 'key:', key);
     if (!buckets[key]) buckets[key] = [];
     buckets[key].push(e);
   }
+  console.log('Buckets:', buckets);
 
   if (view === 'month') {
     // build month grid - display range already calculated as start/end
@@ -152,6 +158,12 @@ async function renderCalendar() {
         cell.appendChild(dayNum);
         const key = cursor.getFullYear() + '-' + String(cursor.getMonth()+1).padStart(2,'0') + '-' + String(cursor.getDate()).padStart(2,'0');
         const evs = buckets[key] || [];
+        if (week === 0 && i === 0) {
+          console.log('First cell - cursor:', cursor.toString(), 'key:', key, 'events:', evs.length);
+        }
+        if (evs.length > 0) {
+          console.log('Cell date:', key, 'cursor:', cursor.toString(), 'has', evs.length, 'events');
+        }
         const list = document.createElement('ul');
         list.className = 'day-events';
         for (const e of evs) {
