@@ -1,6 +1,8 @@
 async function fetchEvents(start, end, query = "") {
   const params = new URLSearchParams({ start, end, query });
-  const res = await fetch(`/api/v1/events?${params.toString()}`, {
+  const url = `/api/v1/events?${params.toString()}`;
+  console.log('Fetching events:', url);
+  const res = await fetch(url, {
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
   });
@@ -8,7 +10,9 @@ async function fetchEvents(start, end, query = "") {
     console.error("イベント取得失敗", res.status);
     return [];
   }
-  return await res.json();
+  const events = await res.json();
+  console.log(`取得したイベント数: ${events.length}`, events);
+  return events;
 }
 
 function startOfMonth(date) {
@@ -28,9 +32,11 @@ function startOfWeek(date) {
 }
 
 function endOfWeek(date) {
-  const s = startOfWeek(date);
-  s.setDate(s.getDate() + 7);
-  return s;
+  const d = new Date(date);
+  const diff = (d.getDay() + 6) % 7; // Days since Monday
+  d.setDate(d.getDate() - diff + 7); // Go to next Monday
+  d.setHours(0,0,0,0);
+  return d;
 }
 
 function startOfDay(date) {
@@ -62,7 +68,10 @@ async function renderCalendar() {
     const monthEnd = endOfMonth(now);
     // For month view, fetch events for the entire grid (including prev/next month days)
     start = startOfWeek(monthStart);
-    end = endOfWeek(new Date(monthEnd.getTime() - 1)); // Last day of month
+    // Get last day of month (monthEnd is first day of next month, so subtract 1 day)
+    const lastDayOfMonth = new Date(monthEnd);
+    lastDayOfMonth.setDate(lastDayOfMonth.getDate() - 1);
+    end = endOfWeek(lastDayOfMonth);
   } else if (view === "week") {
     start = startOfWeek(now);
     end = endOfWeek(now);
@@ -126,7 +135,9 @@ async function renderCalendar() {
     // Grid starts from first Monday on or before month start
     let cursor = startOfWeek(monthStart);
     // Grid ends after last Sunday on or after month end
-    const gridEnd = endOfWeek(new Date(monthEnd.getTime() - 1));
+    const lastDayOfMonth = new Date(monthEnd);
+    lastDayOfMonth.setDate(lastDayOfMonth.getDate() - 1);
+    const gridEnd = endOfWeek(lastDayOfMonth);
     while (cursor < gridEnd) {
       const row = document.createElement('div');
       row.className = 'calendar-row';
