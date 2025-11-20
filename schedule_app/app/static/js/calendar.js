@@ -25,17 +25,19 @@ function endOfMonth(date) {
 
 function startOfWeek(date) {
   const d = new Date(date);
-  const diff = (d.getDay() + 6) % 7; // Monday-start
-  d.setDate(d.getDate() - diff);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // Monday-start (Sunday=0, Monday=1)
+  d.setDate(d.getDate() + diff);
   d.setHours(0,0,0,0);
   return d;
 }
 
 function endOfWeek(date) {
   const d = new Date(date);
-  const diff = (d.getDay() + 6) % 7; // Days since Monday
-  d.setDate(d.getDate() - diff + 7); // Go to next Monday
-  d.setHours(0,0,0,0);
+  const day = d.getDay();
+  const diff = day === 0 ? 0 : 7 - day; // Days until Sunday (Sunday=0)
+  d.setDate(d.getDate() + diff);
+  d.setHours(23,59,59,999);
   return d;
 }
 
@@ -137,8 +139,11 @@ async function renderCalendar() {
     // Grid ends after last Sunday on or after month end
     const lastDayOfMonth = new Date(monthEnd);
     lastDayOfMonth.setDate(lastDayOfMonth.getDate() - 1);
-    const gridEnd = endOfWeek(lastDayOfMonth);
-    while (cursor < gridEnd) {
+    const gridEndDate = endOfWeek(lastDayOfMonth);
+    const gridEndDay = new Date(gridEndDate);
+    gridEndDay.setHours(0,0,0,0); // Compare just the date
+    
+    while (cursor <= gridEndDay) {
       const row = document.createElement('div');
       row.className = 'calendar-row';
       for (let i=0;i<7;i++){
