@@ -12,6 +12,10 @@ async function fetchEvents(start, end, query = "") {
   }
   const events = await res.json();
   console.log(`取得したイベント数: ${events.length}`, events);
+  if (events.length > 0) {
+    console.log('First event structure:', events[0]);
+    console.log('First event keys:', Object.keys(events[0]));
+  }
   return events;
 }
 
@@ -112,6 +116,8 @@ async function renderCalendar() {
   // group events by date (YYYY-MM-DD) using local date
   const buckets = {};
   for (const e of events) {
+    console.log('Processing event:', e);
+    console.log('Event properties:', 'title=' + e.title, 'start_at=' + e.start_at, 'end_at=' + e.end_at);
     // Parse the ISO string and convert to local date for bucketing
     const d = new Date(e.start_at);
     // Use local date for key to match calendar cells
