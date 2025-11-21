@@ -75,7 +75,9 @@ def list_events():
     
     current_app.logger.info(f"[API] Query returned {len(events)} events")
     
-    return jsonify([{
+    # Temporary debug: add debug info to response headers
+    from flask import make_response
+    result = jsonify([{
         "id": e.id,
         "title": e.title,
         "description": e.description,
@@ -83,6 +85,14 @@ def list_events():
         "end_at": e.end_at.isoformat() + 'Z' if e.end_at else None,
         "color": e.color
     } for e in events])
+    
+    response = make_response(result)
+    response.headers['X-Debug-User-ID'] = str(current_user.id)
+    response.headers['X-Debug-Username'] = current_user.username
+    response.headers['X-Debug-Event-Count'] = str(len(events))
+    response.headers['X-Debug-Org-IDs'] = ','.join(map(str, org_ids)) if org_ids else 'none'
+    response.headers['X-Debug-Total-Before-Filter'] = str(total_before_filter)
+    return response
 
 
 @api_bp.route('/events/<int:event_id>/reactions', methods=['GET'])
