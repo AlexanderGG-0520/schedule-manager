@@ -112,6 +112,8 @@ def create_app(config=None):
     app.register_blueprint(auth_bp)
     app.register_blueprint(events_bp)
     app.register_blueprint(org_bp)
+    # Exempt API blueprint from CSRF protection (uses session auth still)
+    csrf.exempt(api_bp)
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
     # Tasks (ToDo) blueprint

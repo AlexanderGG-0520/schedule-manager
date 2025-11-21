@@ -26,7 +26,14 @@ def list_events():
 
     # Debug logging
     import sys
-    print(f"[DEBUG] Current user ID: {current_user.id}, Username: {current_user.username}", file=sys.stderr)
+    from flask_login import current_user
+    print(f"[DEBUG] API called - Authenticated: {current_user.is_authenticated}", file=sys.stderr)
+    if current_user.is_authenticated:
+        print(f"[DEBUG] Current user ID: {current_user.id}, Username: {current_user.username}", file=sys.stderr)
+    else:
+        print(f"[DEBUG] User not authenticated - should redirect to login", file=sys.stderr)
+        # This won't be reached if @login_required redirects first
+        return jsonify({"error": "Not authenticated"}), 401
 
     # Get both personal events and organization events
     from ..models import Organization, User
