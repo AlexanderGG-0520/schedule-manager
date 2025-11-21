@@ -50,3 +50,5 @@ def downgrade():
     op.drop_index(op.f('ix_attachments_uploaded_by'), table_name='attachments')
     op.drop_index(op.f('ix_attachments_event_id'), table_name='attachments')
     op.drop_table('attachments')
+
+# a
