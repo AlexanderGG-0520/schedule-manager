@@ -23,7 +23,19 @@ async function fetchEvents(start, end, query = "") {
       console.error('Response body:', text.substring(0, 500));
       return [];
     }
-    const events = await res.json();
+    const data = await res.json();
+    console.log('API Response:', data);
+    
+    // Handle new response format with debug info
+    let events;
+    if (data.debug) {
+      console.log('DEBUG INFO:', data.debug);
+      events = data.events || [];
+    } else {
+      // Fallback to old format (array)
+      events = Array.isArray(data) ? data : [];
+    }
+    
     console.log(`取得したイベント数: ${events.length}`, events);
     if (events.length > 0) {
       console.log('First event structure:', events[0]);

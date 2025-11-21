@@ -75,24 +75,30 @@ def list_events():
     
     current_app.logger.info(f"[API] Query returned {len(events)} events")
     
-    # Temporary debug: add debug info to response headers
-    from flask import make_response
-    result = jsonify([{
+    # Temporary debug: include debug info in response
+    debug_info = {
+        "user_id": current_user.id,
+        "username": current_user.username,
+        "org_ids": org_ids,
+        "total_before_filter": total_before_filter,
+        "event_count": len(events),
+        "date_range": f"{start} to {end}" if start and end else "no filter"
+    }
+    
+    events_data = [{
         "id": e.id,
         "title": e.title,
         "description": e.description,
         "start_at": e.start_at.isoformat() + 'Z' if e.start_at else None,
         "end_at": e.end_at.isoformat() + 'Z' if e.end_at else None,
         "color": e.color
-    } for e in events])
+    } for e in events]
     
-    response = make_response(result)
-    response.headers['X-Debug-User-ID'] = str(current_user.id)
-    response.headers['X-Debug-Username'] = current_user.username
-    response.headers['X-Debug-Event-Count'] = str(len(events))
-    response.headers['X-Debug-Org-IDs'] = ','.join(map(str, org_ids)) if org_ids else 'none'
-    response.headers['X-Debug-Total-Before-Filter'] = str(total_before_filter)
-    return response
+    # Return with debug info
+    return jsonify({
+        "debug": debug_info,
+        "events": events_data
+    })
 
 
 @api_bp.route('/events/<int:event_id>/reactions', methods=['GET'])
