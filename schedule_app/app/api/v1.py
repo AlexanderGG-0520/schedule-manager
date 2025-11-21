@@ -53,8 +53,8 @@ def list_events():
         "id": e.id,
         "title": e.title,
         "description": e.description,
-        "start_at": e.start_at.isoformat(),
-        "end_at": e.end_at.isoformat(),
+        "start_at": e.start_at.isoformat() + 'Z' if e.start_at else None,
+        "end_at": e.end_at.isoformat() + 'Z' if e.end_at else None,
         "color": e.color
     } for e in events])
 

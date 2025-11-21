@@ -16,6 +16,15 @@ async function fetchEvents(start, end, query = "") {
     console.log('First event structure:', events[0]);
     console.log('First event keys:', Object.keys(events[0]));
   }
+  // Ensure datetime strings have 'Z' suffix for UTC interpretation
+  events.forEach(e => {
+    if (e.start_at && !e.start_at.endsWith('Z') && !e.start_at.includes('+')) {
+      e.start_at = e.start_at + 'Z';
+    }
+    if (e.end_at && !e.end_at.endsWith('Z') && !e.end_at.includes('+')) {
+      e.end_at = e.end_at + 'Z';
+    }
+  });
   return events;
 }
 
