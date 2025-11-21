@@ -72,7 +72,7 @@ def list_events():
 
 
 
-@events_bp.route("/api/v1/events")
+@events_bp.route("/api/v1/events_OLD_DEPRECATED")  # Changed to avoid conflict with api/v1.py
 @login_required
 def api_events():
     """Return events as JSON for a given time window.
