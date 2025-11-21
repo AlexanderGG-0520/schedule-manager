@@ -24,10 +24,16 @@ def list_events():
     end = request.args.get("end")
     query = request.args.get("query", "", type=str)
 
+    # Debug logging
+    import sys
+    print(f"[DEBUG] Current user ID: {current_user.id}, Username: {current_user.username}", file=sys.stderr)
+
     # Get both personal events and organization events
     from ..models import Organization
     user_orgs = Organization.query.join(Organization.members).filter_by(id=current_user.id).all()
     org_ids = [org.id for org in user_orgs]
+    
+    print(f"[DEBUG] User organizations: {org_ids}", file=sys.stderr)
     
     # Personal events or events from user's organizations
     if org_ids:
@@ -49,6 +55,9 @@ def list_events():
     if query:
         q = q.filter(Event.title.ilike(f"%{query}%") | Event.description.ilike(f"%{query}%"))
     events = q.order_by(Event.start_at).all()
+    
+    print(f"[DEBUG] Query returned {len(events)} events", file=sys.stderr)
+    
     return jsonify([{
         "id": e.id,
         "title": e.title,
