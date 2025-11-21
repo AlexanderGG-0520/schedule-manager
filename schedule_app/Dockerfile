@@ -30,4 +30,5 @@ EXPOSE 5000
 
 # 本番向け Gunicorn コマンド（ワーカ数は適宜調整）
 # Add --log-level debug and --access-logfile - to see all requests
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "schedule_app.wsgi:app", "-w", "4", "--threads", "2", "--log-level", "debug", "--access-logfile", "-", "--error-logfile", "-"]
+# Add --capture-output to capture Python print statements
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "schedule_app.wsgi:app", "-w", "4", "--threads", "2", "--log-level", "debug", "--access-logfile", "-", "--error-logfile", "-", "--capture-output"]

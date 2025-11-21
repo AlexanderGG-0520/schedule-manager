@@ -24,15 +24,13 @@ def list_events():
     end = request.args.get("end")
     query = request.args.get("query", "", type=str)
 
-    # Debug logging
-    import sys
-    from flask_login import current_user
-    print(f"[DEBUG] API called - Authenticated: {current_user.is_authenticated}", file=sys.stderr)
+    # Debug logging using Flask logger instead of print
+    from flask import current_app
+    current_app.logger.info(f"[API] /events called - Authenticated: {current_user.is_authenticated}")
     if current_user.is_authenticated:
-        print(f"[DEBUG] Current user ID: {current_user.id}, Username: {current_user.username}", file=sys.stderr)
+        current_app.logger.info(f"[API] User ID: {current_user.id}, Username: {current_user.username}")
     else:
-        print(f"[DEBUG] User not authenticated - should redirect to login", file=sys.stderr)
-        # This won't be reached if @login_required redirects first
+        current_app.logger.warning(f"[API] User not authenticated")
         return jsonify({"error": "Not authenticated"}), 401
 
     # Get both personal events and organization events
@@ -41,7 +39,7 @@ def list_events():
     user_orgs = Organization.query.join(Organization.members).filter(User.id == current_user.id).all()
     org_ids = [org.id for org in user_orgs]
     
-    print(f"[DEBUG] User organizations: {org_ids}", file=sys.stderr)
+    current_app.logger.info(f"[API] User organizations: {org_ids}")
     
     # Personal events or events from user's organizations
     if org_ids:
@@ -54,7 +52,7 @@ def list_events():
     
     # Debug: count total events for this user before date filtering
     total_before_filter = q.count()
-    print(f"[DEBUG] Total events for user (before date filter): {total_before_filter}", file=sys.stderr)
+    current_app.logger.info(f"[API] Total events for user (before date filter): {total_before_filter}")
     
     if start and end:
         try:
@@ -66,7 +64,7 @@ def list_events():
                 start_dt = start_dt.replace(tzinfo=None)
             if end_dt.tzinfo:
                 end_dt = end_dt.replace(tzinfo=None)
-            print(f"[DEBUG] Date range filter: {start_dt} to {end_dt}", file=sys.stderr)
+            current_app.logger.info(f"[API] Date range filter: {start_dt} to {end_dt}")
         except ValueError:
             abort(400, "start/end の形式が不正です")
         # Filter events that overlap with the date range
@@ -75,7 +73,7 @@ def list_events():
         q = q.filter(Event.title.ilike(f"%{query}%") | Event.description.ilike(f"%{query}%"))
     events = q.order_by(Event.start_at).all()
     
-    print(f"[DEBUG] Query returned {len(events)} events", file=sys.stderr)
+    current_app.logger.info(f"[API] Query returned {len(events)} events")
     
     return jsonify([{
         "id": e.id,
