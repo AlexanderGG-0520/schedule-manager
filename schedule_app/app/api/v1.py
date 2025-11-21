@@ -24,13 +24,13 @@ def list_events():
     end = request.args.get("end")
     query = request.args.get("query", "", type=str)
 
-    # Debug logging using Flask logger instead of print
+    # Debug logging using print to ensure visibility
     from flask import current_app
-    current_app.logger.info(f"[API] /events called - Authenticated: {current_user.is_authenticated}")
+    print(f"[API] /events called - Authenticated: {current_user.is_authenticated}", flush=True)
     if current_user.is_authenticated:
-        current_app.logger.info(f"[API] User ID: {current_user.id}, Username: {current_user.username}")
+        print(f"[API] User ID: {current_user.id}, Username: {current_user.username}", flush=True)
     else:
-        current_app.logger.warning(f"[API] User not authenticated")
+        print(f"[API] User not authenticated", flush=True)
         return jsonify({"error": "Not authenticated"}), 401
 
     # Get both personal events and organization events
@@ -39,7 +39,7 @@ def list_events():
     user_orgs = Organization.query.join(Organization.members).filter(User.id == current_user.id).all()
     org_ids = [org.id for org in user_orgs]
     
-    current_app.logger.info(f"[API] User organizations: {org_ids}")
+    print(f"[API] User organizations: {org_ids}", flush=True)
     
     # Personal events or events from user's organizations
     if org_ids:
@@ -52,7 +52,7 @@ def list_events():
     
     # Debug: count total events for this user before date filtering
     total_before_filter = q.count()
-    current_app.logger.info(f"[API] Total events for user (before date filter): {total_before_filter}")
+    print(f"[API] Total events for user (before date filter): {total_before_filter}", flush=True)
     
     if start and end:
         try:
@@ -64,7 +64,7 @@ def list_events():
                 start_dt = start_dt.replace(tzinfo=None)
             if end_dt.tzinfo:
                 end_dt = end_dt.replace(tzinfo=None)
-            current_app.logger.info(f"[API] Date range filter: {start_dt} to {end_dt}")
+            print(f"[API] Date range filter: {start_dt} to {end_dt}", flush=True)
         except ValueError:
             abort(400, "start/end の形式が不正です")
         # Filter events that overlap with the date range
@@ -73,7 +73,7 @@ def list_events():
         q = q.filter(Event.title.ilike(f"%{query}%") | Event.description.ilike(f"%{query}%"))
     events = q.order_by(Event.start_at).all()
     
-    current_app.logger.info(f"[API] Query returned {len(events)} events")
+    print(f"[API] Query returned {len(events)} events", flush=True)
     
     # Temporary debug: include debug info in response
     debug_info = {
@@ -95,9 +95,9 @@ def list_events():
             "color": e.color
         } for e in events]
     except Exception as e:
-        current_app.logger.error(f"[API] Error serializing events: {e}")
+        print(f"[API] Error serializing events: {e}", flush=True)
         import traceback
-        current_app.logger.error(traceback.format_exc())
+        print(traceback.format_exc(), flush=True)
         events_data = []
     
     # Return with debug info
