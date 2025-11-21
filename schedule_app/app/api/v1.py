@@ -21,25 +21,16 @@ def parse_iso8601(s: str) -> datetime:
 def list_events():
     # Check authentication
     if not current_user.is_authenticated:
-        print("[API] User not authenticated, returning 401", flush=True)
         return jsonify({"error": "Not authenticated"}), 401
     
     start = request.args.get("start")
     end = request.args.get("end")
     query = request.args.get("query", "", type=str)
 
-    # Debug logging using print to ensure visibility
-    from flask import current_app
-    print(f"[API] /events called - Authenticated: {current_user.is_authenticated}", flush=True)
-    print(f"[API] User ID: {current_user.id}, Username: {current_user.username}", flush=True)
-
     # Get both personal events and organization events
     from ..models import Organization, User
-    # Correct join: filter by User.id in the joined members, not Organization.id
     user_orgs = Organization.query.join(Organization.members).filter(User.id == current_user.id).all()
     org_ids = [org.id for org in user_orgs]
-    
-    print(f"[API] User organizations: {org_ids}", flush=True)
     
     # Personal events or events from user's organizations
     if org_ids:
@@ -49,10 +40,6 @@ def list_events():
         )
     else:
         q = Event.query.filter(Event.user_id == current_user.id)
-    
-    # Debug: count total events for this user before date filtering
-    total_before_filter = q.count()
-    print(f"[API] Total events for user (before date filter): {total_before_filter}", flush=True)
     
     if start and end:
         try:
@@ -64,7 +51,6 @@ def list_events():
                 start_dt = start_dt.replace(tzinfo=None)
             if end_dt.tzinfo:
                 end_dt = end_dt.replace(tzinfo=None)
-            print(f"[API] Date range filter: {start_dt} to {end_dt}", flush=True)
         except ValueError:
             abort(400, "start/end の形式が不正です")
         # Filter events that overlap with the date range
@@ -73,38 +59,16 @@ def list_events():
         q = q.filter(Event.title.ilike(f"%{query}%") | Event.description.ilike(f"%{query}%"))
     events = q.order_by(Event.start_at).all()
     
-    print(f"[API] Query returned {len(events)} events", flush=True)
+    events_data = [{
+        "id": e.id,
+        "title": e.title,
+        "description": e.description,
+        "start_at": e.start_at.isoformat() + 'Z' if e.start_at else None,
+        "end_at": e.end_at.isoformat() + 'Z' if e.end_at else None,
+        "color": e.color
+    } for e in events]
     
-    # Temporary debug: include debug info in response
-    debug_info = {
-        "user_id": current_user.id,
-        "username": current_user.username,
-        "org_ids": org_ids,
-        "total_before_filter": total_before_filter,
-        "event_count": len(events),
-        "date_range": f"{start} to {end}" if start and end else "no filter"
-    }
-    
-    try:
-        events_data = [{
-            "id": e.id,
-            "title": e.title,
-            "description": e.description,
-            "start_at": e.start_at.isoformat() + 'Z' if e.start_at else None,
-            "end_at": e.end_at.isoformat() + 'Z' if e.end_at else None,
-            "color": e.color
-        } for e in events]
-    except Exception as e:
-        print(f"[API] Error serializing events: {e}", flush=True)
-        import traceback
-        print(traceback.format_exc(), flush=True)
-        events_data = []
-    
-    # Return with debug info
-    return jsonify({
-        "debug": debug_info,
-        "events": events_data
-    })
+    return jsonify(events_data)
 
 
 @api_bp.route('/events/<int:event_id>/reactions', methods=['GET'])
