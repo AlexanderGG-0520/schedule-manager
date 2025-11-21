@@ -85,14 +85,20 @@ def list_events():
         "date_range": f"{start} to {end}" if start and end else "no filter"
     }
     
-    events_data = [{
-        "id": e.id,
-        "title": e.title,
-        "description": e.description,
-        "start_at": e.start_at.isoformat() + 'Z' if e.start_at else None,
-        "end_at": e.end_at.isoformat() + 'Z' if e.end_at else None,
-        "color": e.color
-    } for e in events]
+    try:
+        events_data = [{
+            "id": e.id,
+            "title": e.title,
+            "description": e.description,
+            "start_at": e.start_at.isoformat() + 'Z' if e.start_at else None,
+            "end_at": e.end_at.isoformat() + 'Z' if e.end_at else None,
+            "color": e.color
+        } for e in events]
+    except Exception as e:
+        current_app.logger.error(f"[API] Error serializing events: {e}")
+        import traceback
+        current_app.logger.error(traceback.format_exc())
+        events_data = []
     
     # Return with debug info
     return jsonify({
