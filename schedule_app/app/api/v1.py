@@ -19,10 +19,15 @@ def parse_iso8601(s: str) -> datetime:
 
 @api_bp.route("/events", methods=["GET"])
 def list_events():
+    import sys
+    sys.stdout.write("[API] list_events function called\n")
+    sys.stdout.flush()
     print("[API] list_events function called", flush=True)
     
     # Check authentication manually
     from flask_login import current_user
+    sys.stdout.write(f"[API] current_user.is_authenticated: {current_user.is_authenticated}\n")
+    sys.stdout.flush()
     print(f"[API] current_user.is_authenticated: {current_user.is_authenticated}", flush=True)
     
     if not current_user.is_authenticated:
