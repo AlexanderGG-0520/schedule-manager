@@ -18,8 +18,17 @@ def parse_iso8601(s: str) -> datetime:
 
 
 @api_bp.route("/events", methods=["GET"])
-@login_required
 def list_events():
+    print("[API] list_events function called", flush=True)
+    
+    # Check authentication manually
+    from flask_login import current_user
+    print(f"[API] current_user.is_authenticated: {current_user.is_authenticated}", flush=True)
+    
+    if not current_user.is_authenticated:
+        print("[API] User not authenticated, returning 401", flush=True)
+        return jsonify({"error": "Not authenticated"}), 401
+    
     start = request.args.get("start")
     end = request.args.get("end")
     query = request.args.get("query", "", type=str)
@@ -27,11 +36,7 @@ def list_events():
     # Debug logging using print to ensure visibility
     from flask import current_app
     print(f"[API] /events called - Authenticated: {current_user.is_authenticated}", flush=True)
-    if current_user.is_authenticated:
-        print(f"[API] User ID: {current_user.id}, Username: {current_user.username}", flush=True)
-    else:
-        print(f"[API] User not authenticated", flush=True)
-        return jsonify({"error": "Not authenticated"}), 401
+    print(f"[API] User ID: {current_user.id}, Username: {current_user.username}", flush=True)
 
     # Get both personal events and organization events
     from ..models import Organization, User
