@@ -19,6 +19,9 @@ def parse_iso8601(s: str) -> datetime:
 
 @api_bp.route("/events", methods=["GET"])
 def list_events():
+    # TEMPORARY TEST: Return hardcoded response to verify deployment
+    return jsonify({"test": "API_WORKS", "timestamp": "2025-11-22T00:00:00Z"}), 200
+    
     import sys
     sys.stdout.write("[API] list_events function called\n")
     sys.stdout.flush()
