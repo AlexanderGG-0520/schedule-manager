@@ -15,6 +15,15 @@ babel = Babel()
 def create_app(config=None):
     app = Flask(__name__, static_folder="static", template_folder="templates")
     app.config.from_object(config or Config)
+    
+    # Configure logging
+    import logging
+    app.logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+    handler.setFormatter(formatter)
+    app.logger.addHandler(handler)
 
     # If using a file-based SQLite URI, ensure the parent directory exists so the DB file can be created.
     db_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
