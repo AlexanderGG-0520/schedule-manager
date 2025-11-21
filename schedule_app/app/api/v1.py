@@ -49,6 +49,13 @@ def list_events():
         try:
             start_dt = parse_iso8601(start)
             end_dt = parse_iso8601(end)
+            # Convert to naive datetime for comparison (DB stores naive timestamps)
+            # Assume DB times are in UTC
+            if start_dt.tzinfo:
+                start_dt = start_dt.replace(tzinfo=None)
+            if end_dt.tzinfo:
+                end_dt = end_dt.replace(tzinfo=None)
+            print(f"[DEBUG] Date range filter: {start_dt} to {end_dt}", file=sys.stderr)
         except ValueError:
             abort(400, "start/end の形式が不正です")
         # Filter events that overlap with the date range
