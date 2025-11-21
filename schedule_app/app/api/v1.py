@@ -29,8 +29,9 @@ def list_events():
     print(f"[DEBUG] Current user ID: {current_user.id}, Username: {current_user.username}", file=sys.stderr)
 
     # Get both personal events and organization events
-    from ..models import Organization
-    user_orgs = Organization.query.join(Organization.members).filter_by(id=current_user.id).all()
+    from ..models import Organization, User
+    # Correct join: filter by User.id in the joined members, not Organization.id
+    user_orgs = Organization.query.join(Organization.members).filter(User.id == current_user.id).all()
     org_ids = [org.id for org in user_orgs]
     
     print(f"[DEBUG] User organizations: {org_ids}", file=sys.stderr)
