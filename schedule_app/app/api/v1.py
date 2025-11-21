@@ -52,6 +52,10 @@ def list_events():
     else:
         q = Event.query.filter(Event.user_id == current_user.id)
     
+    # Debug: count total events for this user before date filtering
+    total_before_filter = q.count()
+    print(f"[DEBUG] Total events for user (before date filter): {total_before_filter}", file=sys.stderr)
+    
     if start and end:
         try:
             start_dt = parse_iso8601(start)
