@@ -2,30 +2,47 @@ async function fetchEvents(start, end, query = "") {
   const params = new URLSearchParams({ start, end, query });
   const url = `/api/v1/events?${params.toString()}`;
   console.log('Fetching events:', url);
-  const res = await fetch(url, {
-    credentials: "same-origin",
-    headers: { "Accept": "application/json" },
-  });
-  if (!res.ok) {
-    console.error("イベント取得失敗", res.status);
+  try {
+    const res = await fetch(url, {
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    console.log('Fetch response status:', res.status, 'OK:', res.ok);
+    console.log('Response headers:', [...res.headers.entries()]);
+    if (!res.ok) {
+      console.error("イベント取得失敗", res.status, res.statusText);
+      const text = await res.text();
+      console.error("Response body:", text.substring(0, 500));
+      return [];
+    }
+    const contentType = res.headers.get('content-type');
+    console.log('Content-Type:', contentType);
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('Response is not JSON! Content-Type:', contentType);
+      const text = await res.text();
+      console.error('Response body:', text.substring(0, 500));
+      return [];
+    }
+    const events = await res.json();
+    console.log(`取得したイベント数: ${events.length}`, events);
+    if (events.length > 0) {
+      console.log('First event structure:', events[0]);
+      console.log('First event keys:', Object.keys(events[0]));
+    }
+    // Ensure datetime strings have 'Z' suffix for UTC interpretation
+    events.forEach(e => {
+      if (e.start_at && !e.start_at.endsWith('Z') && !e.start_at.includes('+')) {
+        e.start_at = e.start_at + 'Z';
+      }
+      if (e.end_at && !e.end_at.endsWith('Z') && !e.end_at.includes('+')) {
+        e.end_at = e.end_at + 'Z';
+      }
+    });
+    return events;
+  } catch (error) {
+    console.error('Fetch error:', error);
     return [];
   }
-  const events = await res.json();
-  console.log(`取得したイベント数: ${events.length}`, events);
-  if (events.length > 0) {
-    console.log('First event structure:', events[0]);
-    console.log('First event keys:', Object.keys(events[0]));
-  }
-  // Ensure datetime strings have 'Z' suffix for UTC interpretation
-  events.forEach(e => {
-    if (e.start_at && !e.start_at.endsWith('Z') && !e.start_at.includes('+')) {
-      e.start_at = e.start_at + 'Z';
-    }
-    if (e.end_at && !e.end_at.endsWith('Z') && !e.end_at.includes('+')) {
-      e.end_at = e.end_at + 'Z';
-    }
-  });
-  return events;
 }
 
 function startOfMonth(date) {
