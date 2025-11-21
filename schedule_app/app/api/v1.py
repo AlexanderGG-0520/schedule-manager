@@ -19,6 +19,10 @@ def parse_iso8601(s: str) -> datetime:
 
 @api_bp.route("/events", methods=["GET"])
 def list_events():
+    import sys
+    sys.stderr.write("===== list_events() FUNCTION CALLED =====\n")
+    sys.stderr.flush()
+    
     # TEMPORARY TEST: Return hardcoded response with no-cache headers
     response = jsonify({"test": "API_WORKS", "timestamp": "2025-11-22T00:00:00Z"})
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
