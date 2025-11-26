@@ -207,12 +207,21 @@ async function renderCalendar() {
           li.style.borderLeft = `4px solid ${e.color || '#4287f5'}`;
           li.style.cursor = 'pointer';
           li.textContent = `${new Date(e.start_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ${e.title}`;
-          li.addEventListener('click', function() {
+          li.addEventListener('click', function(event) {
+            event.stopPropagation(); // Prevent triggering cell click
             window.location.href = `/events/${e.id}/edit`;
           });
           list.appendChild(li);
         }
         cell.appendChild(list);
+        
+        // Add click handler to cell for creating new events
+        cell.style.cursor = 'pointer';
+        cell.dataset.date = key; // Store date in data attribute
+        cell.addEventListener('click', function() {
+          window.location.href = `/events/create?date=${key}`;
+        });
+        
         row.appendChild(cell);
         cursor.setDate(cursor.getDate()+1);
       }
@@ -253,12 +262,21 @@ async function renderCalendar() {
         li.style.borderLeft = `4px solid ${e.color || '#4287f5'}`;
         li.style.cursor = 'pointer';
         li.textContent = `${new Date(e.start_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ${e.title}`;
-        li.addEventListener('click', function() {
+        li.addEventListener('click', function(event) {
+          event.stopPropagation(); // Prevent triggering cell click
           window.location.href = `/events/${e.id}/edit`;
         });
         list.appendChild(li);
       }
       cell.appendChild(list);
+      
+      // Add click handler to cell for creating new events
+      cell.style.cursor = 'pointer';
+      cell.dataset.date = key; // Store date in data attribute
+      cell.addEventListener('click', function() {
+        window.location.href = `/events/create?date=${key}`;
+      });
+      
       row.appendChild(cell);
     }
     grid.appendChild(row);

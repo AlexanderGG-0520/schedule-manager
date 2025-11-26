@@ -237,6 +237,26 @@ def create_event():
     choices = [(-1, "個人用")] + [(o.id, o.name) for o in orgs]
     form.organization_id.choices = cast(Any, choices)
 
+    # Pre-fill date from query parameter if provided
+    if request.method == "GET":
+        date_param = request.args.get("date")  # Expected format: YYYY-MM-DD
+        if date_param:
+            try:
+                # Parse date and set default times (9:00 AM - 10:00 AM)
+                date_parts = date_param.split('-')
+                year = int(date_parts[0])
+                month = int(date_parts[1])
+                day = int(date_parts[2])
+                
+                # Create datetime objects with default times
+                start_time = datetime(year, month, day, 9, 0)  # 9:00 AM
+                end_time = datetime(year, month, day, 10, 0)   # 10:00 AM
+                
+                form.start_at.data = start_time
+                form.end_at.data = end_time
+            except (ValueError, IndexError):
+                pass  # Invalid date format, ignore
+
     if form.validate_on_submit():
         org_id_raw = form.organization_id.data
         try:
